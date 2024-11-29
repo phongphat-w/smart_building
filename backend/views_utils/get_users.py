@@ -1,0 +1,48 @@
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+from rest_framework import status
+from django.db.models import Q  # Handle OR conditions
+#from django.contrib.auth import get_user_model
+from ..models import Guest
+from rest_framework.pagination import PageNumberPagination
+from ..serializers import GuestSerializer
+import inspect
+
+#User = get_user_model()
+User = Guest
+
+class UserPagination(PageNumberPagination):
+    page_size = 10
+    page_size_query_param = "page_size"
+    max_page_size = 100
+
+@api_view(["GET"])
+def get_users(request):
+    try:
+        # Get the search query parameter, default to empty string if not provided
+        search = request.GET.get("search", "")
+
+        # If search query exists, filter users based on it
+        if search:
+           users = User.objects.filter(
+                Q(first_name__icontains=search) | Q(email__icontains=search)
+            )
+        else:
+            # If no search query, just get all users
+            users = User.objects.all()
+
+        # Ordered before pagination
+        users = users.order_by("first_name")
+
+        # Apply pagination
+        paginator = UserPagination()
+        result_page = paginator.paginate_queryset(users, request)
+
+        # Serialize the result
+        serializer = GuestSerializer(result_page, many=True)
+        return paginator.get_paginated_response(serializer.data)
+    
+    except Exception as e:
+        print(f"""{inspect.currentframe().f_code.co_name}(): Error - {e}""")
+        return Response({"error": "Cannot show users!"}, status=status.HTTP_400_BAD_REQUEST)
+

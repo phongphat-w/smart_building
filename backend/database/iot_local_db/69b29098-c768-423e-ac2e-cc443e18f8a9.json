@@ -1,0 +1,13 @@
+{
+    "device_id": "69b29098-c768-423e-ac2e-cc443e18f8a9",
+    "auto_flag": 1,
+    "sensors": {
+        "light_level": 401.0,
+        "temperature": 25.0,
+        "battery_level": 70.0
+    },
+    "create_at": "2024-11-27T13:59:45.766685+00:00",
+    "create_by": "55a6d8ae-e242-45c1-8bd0-db4975cc366a",
+    "update_at": "2024-11-27T13:59:45.766685+00:00",
+    "update_by": "55a6d8ae-e242-45c1-8bd0-db4975cc366a"
+}

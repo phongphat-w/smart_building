@@ -1,0 +1,87 @@
+import React, { useState } from 'react';
+import axios from 'axios';
+
+const LoginPage = () => {
+  // State variables for the form fields and error messages
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  // Handle form submission
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setErrorMessage('');
+
+    // Create the payload
+    const data = { email, password };
+
+    try {
+        const response = await axios.post('http://127.0.0.1:8000/api/login_guest/', data, {
+            headers: {
+            'Content-Type': 'application/json',
+            },
+        });
+        // Response contains a token
+        localStorage.setItem('auth_token', response.data.token);
+        setLoading(false);
+
+        // Redirect landing page
+        window.location.href = '/dashboard';
+    } catch (error) {
+        setLoading(false);
+        setErrorMessage(error.response ? error.response.data.error : 'Error during login');
+    }
+  };
+
+  return (
+    <div className="container mt-5">
+      <div className="row justify-content-center">
+        <div className="col-md-6">
+          <div className="card">
+            <div className="card-body">
+              <h2 className="text-center mb-4">Login</h2>
+              <form onSubmit={handleSubmit}>
+                {errorMessage && <div className="alert alert-danger">{errorMessage}</div>}
+
+                <div className="form-group">
+                  <label htmlFor="email">Email</label>
+                  <input
+                    type="email"
+                    className="form-control"
+                    id="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                  />
+                </div>
+
+                <div className="form-group mt-3">
+                  <label htmlFor="password">Password</label>
+                  <input
+                    type="password"
+                    className="form-control"
+                    id="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                  />
+                </div>
+
+                <div className="d-flex justify-content-between mt-3">
+                  <button type="submit" className="btn btn-primary" disabled={loading}>
+                    {loading ? 'Logging in...' : 'Login'}
+                  </button>
+                  <a href="/signup" className="btn btn-link">Sign Up</a>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default LoginPage;

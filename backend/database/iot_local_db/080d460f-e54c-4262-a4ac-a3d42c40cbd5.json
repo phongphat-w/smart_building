@@ -1,0 +1,13 @@
+{
+    "device_id": "080d460f-e54c-4262-a4ac-a3d42c40cbd5",
+    "auto_flag": 1,
+    "sensors": {
+        "co2": 400.0,
+        "humidity": 50.0,
+        "battery_level": 70.0
+    },
+    "create_at": "2024-11-27T13:59:45.736756+00:00",
+    "create_by": "55a6d8ae-e242-45c1-8bd0-db4975cc366a",
+    "update_at": "2024-11-27T13:59:45.736756+00:00",
+    "update_by": "55a6d8ae-e242-45c1-8bd0-db4975cc366a"
+}

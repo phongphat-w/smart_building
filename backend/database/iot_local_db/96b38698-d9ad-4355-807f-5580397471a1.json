@@ -1,0 +1,12 @@
+{
+    "device_id": "96b38698-d9ad-4355-807f-5580397471a1",
+    "auto_flag": 1,
+    "sensors": {
+        "object_status": 0,
+        "battery_level": 70.0
+    },
+    "create_at": "2024-11-27T13:59:45.762093+00:00",
+    "create_by": "55a6d8ae-e242-45c1-8bd0-db4975cc366a",
+    "update_at": "2024-11-27T13:59:45.762093+00:00",
+    "update_by": "55a6d8ae-e242-45c1-8bd0-db4975cc366a"
+}

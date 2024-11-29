@@ -1,0 +1,13 @@
+{
+    "device_id": "f531b9c1-c46a-42c4-989d-1d5be315f6a6",
+    "auto_flag": 1,
+    "sensors": {
+        "voltage": 100.0,
+        "current": 50.0,
+        "battery_level": 70.0
+    },
+    "create_at": "2024-11-27T13:59:45.751727+00:00",
+    "create_by": "55a6d8ae-e242-45c1-8bd0-db4975cc366a",
+    "update_at": "2024-11-27T13:59:45.751727+00:00",
+    "update_by": "55a6d8ae-e242-45c1-8bd0-db4975cc366a"
+}
