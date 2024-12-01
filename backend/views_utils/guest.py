@@ -1,24 +1,31 @@
 from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from ..models import Guest
-from ..serializers import GuestSerializer
+from backend.models import Guest 
+from backend.models_utils.auth_backend import EmailBackend
+from backend.serializers import GuestSerializer
 from django.contrib.auth import authenticate
 from rest_framework.authtoken.models import Token
+
+from rest_framework.permissions import AllowAny
+from rest_framework.decorators import api_view, permission_classes
+
+from backend.database.db_connect import DbConnect
 
 from datetime import datetime
 import os
 import inspect
-from ..database.db_connect import DbConnect
+import uuid
 
 @api_view(["POST"])
+@permission_classes([AllowAny])  # Allow any user to register
 def register_guest(request):
     try:
         if request.method == "POST":
-            email = request.data.get("email")
             first_name = request.data.get("first_name")
             last_name = request.data.get("last_name")
             password = request.data.get("password")
+            email = request.data.get("email")
             checkin_date = request.data.get("checkin_date")
             checkout_date = request.data.get("checkout_date")
             building_id = request.data.get("building_id")
@@ -32,10 +39,10 @@ def register_guest(request):
 
             # Create the new guest
             guest = Guest.objects.create_user(
-                email = email,
                 first_name = first_name,
                 last_name = last_name,
                 password = password,
+                email = email,
                 checkin_date = checkin_date,
                 checkout_date = checkout_date,
                 building_id = building_id,
@@ -51,6 +58,7 @@ def register_guest(request):
         return Response({"Cannot register!"}, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(["POST"])
+#@permission_classes([AllowAny])  # Allow any user to register
 def login_guest(request):
     try:
         email = request.data.get("email")
@@ -60,11 +68,10 @@ def login_guest(request):
         if not email or not password:
             return Response({"error": "Email and password are required."}, status=status.HTTP_400_BAD_REQUEST)
 
-        print("before authenticate")
-        # Authenticate the user
-        user = authenticate(email=email, password=password)
-
-        print("After authenticate")
+        # Authenticate the user by using email as username
+        #user = authenticate(request, username=email, password=password)
+        email_backend = EmailBackend()
+        user = email_backend.authenticate(request=request, username=email, password=password)
 
         if user is None:
             return Response({"error": "Invalid credentials."}, status=status.HTTP_401_UNAUTHORIZED)
@@ -88,6 +95,7 @@ def login_guest(request):
     
 
 @api_view(["GET"])
+#@permission_classes([AllowAny])  # Allow any user to register
 def get_user_devices(request):
     root_path = os.path.abspath(os.path.join(os.path.realpath(__file__), ".."))
     db = DbConnect(root_path=root_path)

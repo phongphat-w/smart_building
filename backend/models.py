@@ -1,14 +1,13 @@
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
 from django.utils import timezone
-from django.contrib.auth.hashers import make_password
 
 import datetime
 import inspect
 import uuid
 
 class GuestManager(BaseUserManager):
-    def create_user(self, email, first_name, last_name, password, checkin_date, checkout_date, building_id, floor_id, room_id):
+    def create_user(self, first_name, last_name, password, email, checkin_date, checkout_date, building_id, floor_id, room_id):
         if not email:
             print(f"""{inspect.currentframe().f_code.co_name}(): Warning - The Email field must be set""")
             raise ValueError("The Email field must be set")
@@ -23,7 +22,7 @@ class GuestManager(BaseUserManager):
             checkout_date = datetime.datetime.strptime(checkout_date, "%Y-%m-%dT%H:%M")  # Convert from string to datetime
         
         # Create a user instance
-        user = self.model(email=email, first_name=first_name, last_name=last_name, checkin_date=checkin_date, checkout_date=checkout_date, building_id=building_id, floor_id=floor_id, room_id=room_id)
+        user = self.model(first_name=first_name, last_name=last_name, email=email, checkin_date=checkin_date, checkout_date=checkout_date, building_id=building_id, floor_id=floor_id, room_id=room_id)
         
         # Hash and set password
         user.set_password(password)
@@ -32,16 +31,17 @@ class GuestManager(BaseUserManager):
         user.save(using=self._db)
         return user
 
-    def create_superuser(self, email, first_name, last_name, password):
-        user = self.create_user(email, first_name, last_name, password)
+    def create_superuser(self, first_name, last_name, password, email):
+        user = self.create_user(first_name, last_name, password, email)
         user.is_admin = True
         user.save(using=self._db)
         return user
 
 class Guest(AbstractBaseUser):
-    email = models.EmailField(unique=True)
-    first_name = models.CharField(max_length=255)
-    last_name = models.CharField(max_length=255)
+    user_id = models.UUIDField(default=uuid.uuid4(), primary_key=True)
+    first_name = models.CharField(max_length=100)
+    last_name = models.CharField(max_length=100)
+    email = models.EmailField(max_length=100, unique=True)
     checkin_date = models.DateTimeField()
     checkout_date = models.DateTimeField()
     building_id = models.CharField(default="000",max_length=3)
@@ -50,10 +50,10 @@ class Guest(AbstractBaseUser):
     is_active = models.BooleanField(default=True)
     is_admin = models.BooleanField(default=False)
 
-    objects = GuestManager()
-
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = ["first_name", "last_name", "checkin_date", "checkout_date", "building_id", "floor_id", "room_id"]  # Password is required by default
+
+    objects = GuestManager()
 
     def __str__(self):
         return self.email
@@ -66,9 +66,4 @@ class Guest(AbstractBaseUser):
     
     class Meta:
         app_label = "backend"
-
-       
-#=====================================================
-
-
 

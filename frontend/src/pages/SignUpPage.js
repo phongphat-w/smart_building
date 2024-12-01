@@ -39,7 +39,7 @@ const GuestSignupForm = () => {
         setMessage(
           <>
             <p>Registration successful! Welcome to our Smart Building. 
-              <Link to="/login" className="btn btn-link">SignIn</Link>
+              <Link to="/signin" className="btn btn-link">SignIn</Link>
             </p>
           </>
         );

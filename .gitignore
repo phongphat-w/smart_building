@@ -17,8 +17,7 @@ backend/user/gen_user.py
 
 backend/migrations/
 
-# Ignore node_modules (frontend dependencies)
-frontend/node_modules/
+logs/
 
 # Ignore Python bytecode files
 *.pyc

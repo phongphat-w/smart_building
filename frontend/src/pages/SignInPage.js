@@ -18,7 +18,7 @@ const LoginPage = () => {
     const data = { email, password };
 
     try {
-        const response = await axios.post('http://127.0.0.1:8000/api/login_guest/', data, {
+        const response = await axios.post(`http://127.0.0.1:8000/api/login_guest/`, data, {
             headers: {
             'Content-Type': 'application/json',
             },

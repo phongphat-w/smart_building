@@ -12,7 +12,7 @@ const DeviceDashboard = () => {
   useEffect(() => {
     const fetchDevices = async () => {
       try {
-        const response = await axios.get('http://127.0.0.1:8000/api/get_user_devices/', {
+        const response = await axios.get(`http://127.0.0.1:8000/api/get_user_devices/`, {
           headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` }
         });
         setDevices(response.data.devices);

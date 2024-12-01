@@ -1,6 +1,6 @@
 from rest_framework.response import Response
 from django.shortcuts import render
-from ..database.db_connect import DbConnect
+from backend.database.db_connect import DbConnect
 import os
 import inspect
 

@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from .models import Guest
-#from django.contrib.auth import get_user_model
+from django.contrib.auth import get_user_model
 from .models import Guest
 
 class GuestSerializer(serializers.ModelSerializer):
@@ -24,10 +24,10 @@ class GuestSerializer(serializers.ModelSerializer):
         return guest
 
 #get all users
-#User = get_user_model()
-User = Guest()
-class GuestSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = User
-        fields = ["email", "first_name", "last_name", "checkin_date", "checkout_date", "building_id", "floor_id", "room_id", "is_active"]
+# #User = get_user_model()
+# User = Guest()
+# class GuestSerializer(serializers.ModelSerializer):
+#     class Meta:
+#         model = User
+#         fields = ["email", "first_name", "last_name", "checkin_date", "checkout_date", "building_id", "floor_id", "room_id", "is_active"]
 

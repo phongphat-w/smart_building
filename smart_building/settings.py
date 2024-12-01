@@ -13,6 +13,8 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 from pathlib import Path
 import os
 from dotenv import load_dotenv
+from datetime import datetime
+from logging.handlers import TimedRotatingFileHandler
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -44,19 +46,27 @@ INSTALLED_APPS = [
     'backend',
     'corsheaders',
     'rest_framework.authtoken',
+
+    #'backend.apps.BackendConfig',  # Make sure the correct AppConfig is used
     
 ]
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.TokenAuthentication',
-    ]
+    ],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
+    ],
+    'TOKEN_MODEL': 'backend.models_utils.token_uuid.UUIDToken',  # Custom token model
 }
-
+ 
 AUTHENTICATION_BACKENDS = (
-    '..backend.user.authentication_backend.EmailBackend',  # Modify this path based on file structure
+    'backend.models_utils.auth_backend.EmailBackend',  # Modify this path based on file structure
     'django.contrib.auth.backends.ModelBackend',  # Fallback to default if needed
 )
+
+AUTH_USER_MODEL = 'backend.Guest' #app_label.ModelName
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -71,6 +81,10 @@ MIDDLEWARE = [
     
 ]
 
+# CORS_ALLOWED_ORIGINS = [
+#     "http://localhost:3000",  # React frontend running locally
+#     "http://your-frontend-domain.com",  # Add actual frontend domain here
+# ]
 CORS_ALLOW_ALL_ORIGINS = True
 
 ROOT_URLCONF = 'smart_building.urls'
@@ -90,6 +104,40 @@ TEMPLATES = [
         },
     },
 ]
+
+# Ensure the logs directory exists
+log_dir = os.path.join(BASE_DIR, 'logs')
+if not os.path.exists(log_dir):
+    os.makedirs(log_dir)
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'timed_rotating_file': {
+            'level': 'ERROR', # DEBUG, WARNING, ERROR, INFO
+            'class': 'logging.handlers.TimedRotatingFileHandler',
+            'filename': os.path.join(log_dir, 'django.log'),
+            'when': 'midnight',  # Rotate at midnight
+            'interval': 1,  # Rotate every day
+            'backupCount': 30,  # This keeps the last X days of logs. Older log files are deleted automatically.
+            'formatter': 'verbose',
+        },
+    },
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {message}',
+            'style': '{',
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['timed_rotating_file'],
+            'level': 'DEBUG', # DEBUG, WARNING, ERROR, INFO
+            'propagate': True,
+        },
+    },
+}
 
 WSGI_APPLICATION = 'smart_building.wsgi.application'
 
@@ -115,7 +163,6 @@ DATABASES = {
 }
 
 
-
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
 
@@ -133,8 +180,6 @@ AUTH_PASSWORD_VALIDATORS = [
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
 ]
-
-AUTHENTICATION_BACKENDS = ['path.to.EmailBackend', 'django.contrib.auth.backends.ModelBackend']
 
 
 # Internationalization
@@ -158,3 +203,6 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
+
