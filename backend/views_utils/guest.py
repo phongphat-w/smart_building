@@ -9,6 +9,7 @@ from rest_framework.authtoken.models import Token
 
 from rest_framework.permissions import AllowAny
 from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
 
 from backend.database.db_connect import DbConnect
 
@@ -94,14 +95,16 @@ def login_guest(request):
         return Response({"Cannot login!"}, status=status.HTTP_400_BAD_REQUEST)
     
 
-@api_view(["GET"])
-#@permission_classes([AllowAny])  # Allow any user to register
+#@api_view(["GET"])
+@api_view(["OPTIONS", "GET"])
+@permission_classes([IsAuthenticated])
 def get_user_devices(request):
     root_path = os.path.abspath(os.path.join(os.path.realpath(__file__), ".."))
     db = DbConnect(root_path=root_path)
     try:
         # Get the guest ID
         guest_id = request.user.id
+        print("guest_id = ", guest_id)
 
         db.connect()
         sql_cmd = """
@@ -115,7 +118,7 @@ def get_user_devices(request):
                 FROM 
                     iot_device a
                 JOIN 
-                    backend_guest ON b
+                    backend_guest b ON
                     a.building_id = b.building_id AND 
                     a.floor_id = b.floor_id AND 
                     a.room_id = b.room_id
@@ -124,14 +127,20 @@ def get_user_devices(request):
             """
         params = (guest_id,)
         result = db.execute_query(sql_cmd, params)
-        if result != []:    
-            return Response({"message": "Retrieve data successfully!", "guest_id": guest_id, "result": result}, status=200)
+        if result != []:  
+            response = Response({"message": "Devices fetched successfully!", "guest_id": guest_id, "result": result}, status=200)
         else:
-            return Response({"message": "There is no data!", "guest_id": guest_id, "result": result}, status=200)
+            response = Response({"message": "There is no device!", "guest_id": guest_id, "result": result}, status=200)
+        #
+        response["Access-Control-Allow-Origin"] = "*"  # Allow all origins
+        response["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"  # Allow specific methods
+        response["Access-Control-Allow-Headers"] = "Authorization, Content-Type"  # Allow custom headers
         
-        db.close()
-        return Response(result, status=status.HTTP_200_OK)
-    
+        return response
+
     except Exception as e:
         print(f"""{inspect.currentframe().f_code.co_name}(): Error - {e}""")
         return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    
+    finally:
+        db.close()

@@ -5,6 +5,7 @@ import Modal from 'react-modal';
 const DeviceDashboard = () => {
   const [devices, setDevices] = useState([]);
   const [selectedDevice, setSelectedDevice] = useState(null);
+  //const [newLightLevel, setNewLightLevel] = useState('');
   const [newTemperature, setNewTemperature] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
 
@@ -12,12 +13,14 @@ const DeviceDashboard = () => {
   useEffect(() => {
     const fetchDevices = async () => {
       try {
-        const response = await axios.get(`http://127.0.0.1:8000/api/get_user_devices/`, {
+        const response = await axios.get(`http://127.0.0.1:8000/api/get_user_devices`, {
           headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` }
+          
         });
         setDevices(response.data.devices);
       } catch (error) {
         setErrorMessage('Error fetching devices');
+        console.error('Error fetching devices:', error);
       }
     };
     fetchDevices();
@@ -26,12 +29,15 @@ const DeviceDashboard = () => {
   // Handle device control (e.g., changing temperature)
   const handleDeviceControl = (device) => {
     setSelectedDevice(device);
-    setNewTemperature(device.temperature); //temperature attribute
+    if (selectedDevice.id === "c0ec3c70-b76f-45e0-9297-8b5a4a462a47") //Smart bulbs and LED lights
+        //setNewLightLevel(device.light_level);
+        setNewTemperature(device.temperature);
   };
 
   const handleTemperatureChange = async () => {
     try {
       const response = await axios.post(`http://127.0.0.1:8000/api/control_device/${selectedDevice.id}/`, {
+        //light_level: newLightLevel,
         temperature: newTemperature,
       }, {
         headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` }

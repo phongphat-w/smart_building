@@ -1,12 +1,14 @@
-from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
 from django.db.models import Q  # Handle OR conditions
 #from django.contrib.auth import get_user_model
-from ..models import Guest
+from backend.models import Guest
 from rest_framework.pagination import PageNumberPagination
-from ..serializers import GuestSerializer
+from backend.serializers import GuestSerializer
 import inspect
+
+from rest_framework.permissions import AllowAny
+from rest_framework.decorators import api_view, permission_classes
 
 #User = get_user_model()
 User = Guest
@@ -17,6 +19,7 @@ class UserPagination(PageNumberPagination):
     max_page_size = 100
 
 @api_view(["GET"])
+@permission_classes([AllowAny])  # Allow any user to register
 def get_users(request):
     try:
         # Get the search query parameter, default to empty string if not provided

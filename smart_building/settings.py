@@ -69,23 +69,35 @@ AUTHENTICATION_BACKENDS = (
 AUTH_USER_MODEL = 'backend.Guest' #app_label.ModelName
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
+
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    
     'django.middleware.common.CommonMiddleware',
+
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 
-    'corsheaders.middleware.CorsMiddleware',
+    
     
 ]
 
-# CORS_ALLOWED_ORIGINS = [
-#     "http://localhost:3000",  # React frontend running locally
-#     "http://your-frontend-domain.com",  # Add actual frontend domain here
-# ]
 CORS_ALLOW_ALL_ORIGINS = True
+
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",  # React
+    "http://127.0.0.1:3000",  # React
+    # "http://your-frontend-domain.com",  # Add actual frontend domain here
+]
+
+CORS_ALLOW_HEADERS = [
+    'content-type',
+    'authorization',  # for Authorization headers / using tokens
+    # Add other headers if needed
+]
 
 ROOT_URLCONF = 'smart_building.urls'
 

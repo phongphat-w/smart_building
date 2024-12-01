@@ -20,7 +20,7 @@ def gen_data(iot_device_id, auto_mode = 1, file_name=""):
     try:
         if auto_mode == 1:
             # Define data for each device type    
-            if iot_device_id == con_iot_device_id: #Smart thermostats
+            if iot_device_id == con_iot_device_id:
                 
                 light_level = {
                     "data_id": str(uuid.uuid4()),

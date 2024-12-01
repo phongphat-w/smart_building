@@ -28,7 +28,7 @@ const LoginPage = () => {
         setLoading(false);
 
         // Redirect landing page
-        window.location.href = '/dashboard';
+        window.location.href = '/dashboards';
     } catch (error) {
         setLoading(false);
         setErrorMessage(error.response ? error.response.data.error : 'Error during login');

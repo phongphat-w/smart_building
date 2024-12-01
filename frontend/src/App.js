@@ -2,10 +2,10 @@ import React from "react";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import "bootstrap/dist/css/bootstrap.min.css";
 
-import SignUpPage from "./pages/SignUpPage";
-import SignInPage from "./pages/SignInPage";
-import UserListPage from "./pages/UserListPage";
-import DashboardPage from "./pages/DashboardPage";
+import SignUpPage from "./components/pages/SignUpPage";
+import SignInPage from "./components/pages/SignInPage";
+import UserListPage from "./components/pages/UserListPage";
+import DashboardPage from "./components/pages/DashboardPage";
 
 
 const App = () => {
