@@ -58,7 +58,7 @@ def register_guest(request):
         return Response({"Cannot register!"}, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(["POST"])
-#@permission_classes([AllowAny])  # Allow any user to register
+@permission_classes([AllowAny])  # Allow any user to register
 def login_guest(request):
     try:
         email = request.data.get("email")
