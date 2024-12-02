@@ -3,10 +3,10 @@ import axios from "axios";
 import { Link } from 'react-router-dom';
 
 const GuestSignupForm = () => {
-  const [email, setEmail] = useState("");
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [password, setPassword] = useState("");
+  const [email, setEmail] = useState("");
   const [checkInDate, setCheckInDate] = useState("");
   const [checkOutDate, setCheckOutDate] = useState("");
   const [buildingId, setBuildingId] = useState("");
@@ -14,14 +14,19 @@ const GuestSignupForm = () => {
   const [roomId, setRoomId] = useState("");
   const [message, setMessage] = useState("");
 
+  const [errorMessage, setErrorMessage] = useState('');
+  const [loading, setLoading] = useState(false);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
+    setErrorMessage('');
   
     const data = {
-        email,
         first_name: firstName,
         last_name: lastName,
         password,
+        email,
         checkin_date: checkInDate,
         checkout_date: checkOutDate,
         building_id: buildingId,
@@ -36,6 +41,12 @@ const GuestSignupForm = () => {
         },
       });
       if (response.status === 201) {
+        // Store both tokens after registration
+        localStorage.setItem('auth_token', response.data.access_token);
+        localStorage.setItem('refresh_token', response.data.refresh_token);
+
+        setLoading(false);
+
         setMessage(
           <>
             <p>Registration successful! Welcome to our Smart Building. 
@@ -49,6 +60,7 @@ const GuestSignupForm = () => {
       }
 
     } catch (error) {
+      setLoading(false); // Hide loading indicator
       if (error.response) {
         // Server responded with an error
         console.error("Error response:", error.response);
@@ -68,11 +80,7 @@ const GuestSignupForm = () => {
   return (
     <div className="container mt-5">
       <h2>Guest Registration</h2>
-      <form onSubmit={handleSubmit}>
-        <div className="form-group">
-          <label>Email</label>
-          <input type="email" className="form-control" value={email} onChange={(e) => setEmail(e.target.value)} required />
-        </div>
+      <form onSubmit={handleSubmit}>        
         <div className="form-group">
           <label>First Name</label>
           <input type="text" className="form-control" value={firstName} onChange={(e) => setFirstName(e.target.value)} required />
@@ -84,6 +92,10 @@ const GuestSignupForm = () => {
         <div className="form-group">
           <label>Password</label>
           <input type="password" className="form-control" value={password} onChange={(e) => setPassword(e.target.value)} required />
+        </div>
+        <div className="form-group">
+          <label>Email (email will be a user name for sign in)</label>
+          <input type="email" className="form-control" value={email} onChange={(e) => setEmail(e.target.value)} required />
         </div>
         <div className="form-group">
           <label>Check-in Date</label>

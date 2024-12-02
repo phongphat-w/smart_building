@@ -25,6 +25,8 @@ const LoginPage = () => {
         });
         // Response contains a token
         localStorage.setItem('auth_token', response.data.token);
+        localStorage.setItem('refresh_token', response.data.refresh_token); 
+        
         setLoading(false);
 
         // Redirect landing page

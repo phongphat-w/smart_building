@@ -38,7 +38,7 @@ class GuestManager(BaseUserManager):
         return user
 
 class Guest(AbstractBaseUser):
-    user_id = models.UUIDField(default=uuid.uuid4(), primary_key=True)
+    id = models.UUIDField(default=uuid.uuid4(), primary_key=True) # Django require field name
     first_name = models.CharField(max_length=100)
     last_name = models.CharField(max_length=100)
     email = models.EmailField(max_length=100, unique=True)
@@ -51,7 +51,10 @@ class Guest(AbstractBaseUser):
     is_admin = models.BooleanField(default=False)
 
     USERNAME_FIELD = "email"
-    REQUIRED_FIELDS = ["first_name", "last_name", "checkin_date", "checkout_date", "building_id", "floor_id", "room_id"]  # Password is required by default
+
+    #The field named as the 'USERNAME_FIELD' for a custom user model must not be included in 'REQUIRED_FIELDS'.
+    # Password is required by default
+    REQUIRED_FIELDS = ["first_name", "last_name", "checkin_date", "checkout_date", "building_id", "floor_id", "room_id"] 
 
     objects = GuestManager()
 

@@ -6,15 +6,15 @@ from .models import Guest
 class GuestSerializer(serializers.ModelSerializer):
     class Meta:
         model = Guest
-        fields = ["email", "first_name", "last_name", "password", "checkin_date", "checkout_date", "building_id", "floor_id", "room_id"]
+        fields = ["first_name", "last_name", "password", "email", "checkin_date", "checkout_date", "building_id", "floor_id", "room_id"]
         extra_kwargs = {"password": {"write_only": True}}
 
     def create(self, validated_data):
-        guest = Guest.objects.create_user(
-            email = validated_data["email"],
+        guest = Guest.objects.create_user(            
             first_name = validated_data["first_name"],
             last_name = validated_data["last_name"],
             password = validated_data["password"],
+            email = validated_data["email"],
             checkin_date = validated_data["checkin_date"],
             checkout_date = validated_data["checkout_date"],
             building_id = validated_data["building_id"],
