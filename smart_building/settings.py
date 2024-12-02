@@ -13,7 +13,7 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 from pathlib import Path
 import os
 from dotenv import load_dotenv
-from datetime import datetime
+from datetime import datetime, timedelta
 from logging.handlers import TimedRotatingFileHandler
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -45,13 +45,18 @@ INSTALLED_APPS = [
 
     'backend',
     'corsheaders',
+    'rest_framework_simplejwt',
     'rest_framework.authtoken',
-
+    
     #'backend.apps.BackendConfig',  # Make sure the correct AppConfig is used
     
 ]
 
 REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ],
+
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.TokenAuthentication',
     ],
@@ -59,6 +64,15 @@ REST_FRAMEWORK = {
         'rest_framework.permissions.IsAuthenticated',
     ],
     'TOKEN_MODEL': 'backend.models_utils.token_uuid.UUIDToken',  # Custom token model
+}
+
+# JWT settings
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=5),  # Adjust expiration time as needed
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
+    'ROTATE_REFRESH_TOKENS': True,
+    'BLACKLIST_AFTER_ROTATION': True,
+    'UPDATE_LAST_LOGIN': True,
 }
  
 AUTHENTICATION_BACKENDS = (
@@ -70,11 +84,10 @@ AUTH_USER_MODEL = 'backend.Guest' #app_label.ModelName
 
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
+    'django.middleware.common.CommonMiddleware', # Ensure this is below the CorsMiddleware
 
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
-    
-    'django.middleware.common.CommonMiddleware',
 
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -87,11 +100,11 @@ MIDDLEWARE = [
 
 CORS_ALLOW_ALL_ORIGINS = True
 
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",  # React
-    "http://127.0.0.1:3000",  # React
-    # "http://your-frontend-domain.com",  # Add actual frontend domain here
-]
+# CORS_ALLOWED_ORIGINS = [
+#     "http://localhost:3000",  # React
+#     "http://127.0.0.1:3000",  # React
+#     # "http://your-frontend-domain.com",  # Add actual frontend domain here
+# ]
 
 CORS_ALLOW_HEADERS = [
     'content-type',

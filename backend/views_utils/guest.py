@@ -11,6 +11,10 @@ from rest_framework.permissions import AllowAny
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 
+from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.authentication import JWTAuthentication
+from rest_framework.exceptions import AuthenticationFailed
+
 from backend.database.db_connect import DbConnect
 
 from datetime import datetime
@@ -96,12 +100,17 @@ def login_guest(request):
     
 
 #@api_view(["GET"])
-@api_view(["OPTIONS", "GET"])
+@api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def get_user_devices(request):
     root_path = os.path.abspath(os.path.join(os.path.realpath(__file__), ".."))
     db = DbConnect(root_path=root_path)
     try:
+        user = request.user
+        if not user.is_authenticated:
+            print(f"""{inspect.currentframe().f_code.co_name}(): Error - Invalid or expired token.""")
+            raise AuthenticationFailed('Invalid or expired token.')
+        
         # Get the guest ID
         guest_id = request.user.id
         print("guest_id = ", guest_id)
@@ -127,20 +136,38 @@ def get_user_devices(request):
             """
         params = (guest_id,)
         result = db.execute_query(sql_cmd, params)
-        if result != []:  
-            response = Response({"message": "Devices fetched successfully!", "guest_id": guest_id, "result": result}, status=200)
-        else:
-            response = Response({"message": "There is no device!", "guest_id": guest_id, "result": result}, status=200)
-        #
-        response["Access-Control-Allow-Origin"] = "*"  # Allow all origins
-        response["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"  # Allow specific methods
-        response["Access-Control-Allow-Headers"] = "Authorization, Content-Type"  # Allow custom headers
-        
-        return response
 
+        response = Response()
+        if result != []:  
+            response = Response({"message": "Devices fetched successfully!", "guest_id": guest_id, "data": result}, status=200)
+        else:
+            response = Response({"message": "There is no device!", "guest_id": guest_id, "data": result}, status=200)
+        #
+        return response
+    
     except Exception as e:
         print(f"""{inspect.currentframe().f_code.co_name}(): Error - {e}""")
         return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
     finally:
         db.close()
+
+"""
+# Optional: Token Refresh Mechanism (if not using the built-in TokenRefreshView)
+@api_view(["POST"])
+def refresh_token(request):
+    try:
+        # Extract the refresh token from the request
+        refresh_token = request.data.get('refresh')
+        if not refresh_token:
+            return Response({"error": "Refresh token is required."}, status=400)
+
+        # Validate and create new access token
+        refresh = RefreshToken(refresh_token)
+        new_access_token = str(refresh.access_token)
+
+        return Response({"access": new_access_token}, status=200)
+    
+    except Exception as e:
+        return Response({"error": str(e)}, status=500)
+"""
