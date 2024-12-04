@@ -18,7 +18,7 @@ from django.contrib import admin
 from django.urls import path
 from backend import views
 
-from rest_framework_simplejwt.views import TokenRefreshView
+#from rest_framework_simplejwt.views import TokenRefreshView
 
 urlpatterns = [
     path("admin/", admin.site.urls),
@@ -27,7 +27,8 @@ urlpatterns = [
     path("api/login_guest/", views.login_guest),
     path("api/get_user_devices/", views.get_user_devices),
 
-    path('api/token/refresh/', TokenRefreshView.as_view()),
+    # path('api/token/refresh/', TokenRefreshView.as_view()),
+    path('api/token/refresh/', views.refresh_token),
 
     #Admin
     path("api/get_users/", views.get_users),

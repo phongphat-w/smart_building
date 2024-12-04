@@ -57,13 +57,12 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ],
-
-    'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework.authentication.TokenAuthentication',
-    ],
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated',
     ],
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.TokenAuthentication',
+    ],    
     'TOKEN_MODEL': 'backend.models_utils.token_uuid.UUIDToken',  # Custom token model
 }
 
@@ -132,39 +131,6 @@ TEMPLATES = [
     },
 ]
 
-# Ensure the logs directory exists
-log_dir = os.path.join(BASE_DIR, 'logs')
-if not os.path.exists(log_dir):
-    os.makedirs(log_dir)
-
-LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'handlers': {
-        'timed_rotating_file': {
-            'level': 'ERROR', # DEBUG, WARNING, ERROR, INFO
-            'class': 'logging.handlers.TimedRotatingFileHandler',
-            'filename': os.path.join(log_dir, 'django.log'),
-            'when': 'midnight',  # Rotate at midnight
-            'interval': 1,  # Rotate every day
-            'backupCount': 30,  # This keeps the last X days of logs. Older log files are deleted automatically.
-            'formatter': 'verbose',
-        },
-    },
-    'formatters': {
-        'verbose': {
-            'format': '{levelname} {asctime} {module} {message}',
-            'style': '{',
-        },
-    },
-    'loggers': {
-        'django': {
-            'handlers': ['timed_rotating_file'],
-            'level': 'DEBUG', # DEBUG, WARNING, ERROR, INFO
-            'propagate': True,
-        },
-    },
-}
 
 WSGI_APPLICATION = 'smart_building.wsgi.application'
 
@@ -232,4 +198,52 @@ STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
+#============================
+# Logging system
+#============================
+
+# Ensure the logs directory exists
+log_dir = os.path.join(BASE_DIR, 'logs')
+if not os.path.exists(log_dir):
+    os.makedirs(log_dir)
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'timed_rotating_file': {
+            'level': 'DEBUG',  # Captures all log levels (DEBUG, INFO, WARNING, ERROR, CRITICAL)
+            'class': 'logging.handlers.TimedRotatingFileHandler',
+            'filename': os.path.join(log_dir, 'django.log'),
+            'when': 'midnight',  # Rotate at midnight
+            'interval': 1,  # Rotate every day
+            'backupCount': 366,  # Keep last 366 days of logs
+            'formatter': 'verbose',
+        },
+        # Log to console 
+        'console': {
+            'level': 'DEBUG',  # DEBUG, INFO, WARNING, ERROR
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose',
+        },
+    },
+    'formatters': {
+        'verbose': {
+            'format': '{asctime} - {levelname} - {module}: {message}',
+            'style': '{',
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['timed_rotating_file'],
+            'level': 'DEBUG',  # This captures all log levels (DEBUG, INFO, WARNING, ERROR, CRITICAL)
+            'propagate': True,
+        },
+        'django.db.backends': {
+            'handlers': ['timed_rotating_file'],
+            'level': 'DEBUG',  # This captures all log levels (DEBUG, INFO, WARNING, ERROR, CRITICAL)
+            'propagate': False,
+        },
+    },
+}
 

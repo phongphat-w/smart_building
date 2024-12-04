@@ -38,6 +38,7 @@ class DbConnect:
             print(f"Query executed successfully: {query}")
             return json.loads(json.dumps(self.cursor.fetchall()))
         except Exception as e:
+            print(f"""{inspect.currentframe().f_code.co_name}(): Query - {query}""")
             print(f"""{inspect.currentframe().f_code.co_name}(): Error - {e}""")
             self.connection.rollback()
             return json.dumps([])

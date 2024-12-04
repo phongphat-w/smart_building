@@ -2,7 +2,6 @@ import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import Modal from 'react-modal';
 import { useNavigate } from 'react-router-dom';
-import { jwtDecode } from "jwt-decode";
 
 const DeviceDashboard = () => {
   const [devices, setDevices] = useState([]);
@@ -18,20 +17,15 @@ const DeviceDashboard = () => {
   console.log('DEBUG: Onload() getAuthToken = ' + getAuthToken());
   console.log('DEBUG: Onload() getRefreshToken = ' + getRefreshToken());
 
-  const token = getAuthToken();
-  const decodedToken = jwtDecode(token); // jwtDecode is a function use from the 'jwt-decode' library
-  console.log("DEBUG: Dashbaord - Token expiry: ", new Date(decodedToken.exp * 1000)); // Convert from seconds to milliseconds
-
   // SignOut function - used to remove tokens from localStorage
   const signOut = useCallback(() => {
     console.log("DEBUG: signOut() - is working")
-    // localStorage.removeItem('access_token');  // Remove access token
-    // localStorage.removeItem('refresh_token');  // Remove refresh token
-    // console.log("DEBUG: 2 tokens are removed")
-    navigate('/signin');  // Redirect to Sign In page
-  }, [navigate]);
-  //}, []);
-
+    //localStorage.removeItem('access_token');  // Remove access token
+    //localStorage.removeItem('refresh_token');  // Remove refresh token
+    console.log("DEBUG: 2 tokens are removed")
+    //navigate('/signin');  // Redirect to Sign In page
+  //}, [navigate]);
+  }, []);
 
   // Redirect to SignIn if there's no auth token, useEffect ensures this is only triggered on page load
   useEffect(() => {
@@ -41,12 +35,11 @@ const DeviceDashboard = () => {
     console.log("DEBUG: useEffect() -  token = " + token)
 
     if (!token) {
-      navigate('/signin'); // Redirect if no token
+      //navigate('/signin'); // Redirect if no token
       console.log("DEBUG: useEffect() -  if (!token) = " + token)
     }
-  }, [navigate]);
-  //}, []);
-
+  //}, [navigate]);
+  }, []);
 
   // Memoized function to refresh the token
   const refreshAuthToken = useCallback(async () => {
@@ -59,13 +52,12 @@ const DeviceDashboard = () => {
       console.log("DEBUG: refreshAuthToken() - Sending refresh token:", refreshToken);
 
       const response = await axios.post(`http://127.0.0.1:8000/api/token/refresh/`, { 
-        // headers: { Authorization: `Bearer ${refreshToken}` },
-        // Do not need the header
+        headers: { Authorization: `Bearer ${refreshToken}` },
         refresh: refreshToken 
       });
 
       if (response.data && response.data.access) {
-        const { access } = response.data; // Extract the access token directly
+        const { access } = response.data;  // .data is an object of access token from the response
         localStorage.setItem('access_token', access); // Store the new access token
         return access;
       } else {
@@ -84,8 +76,6 @@ const DeviceDashboard = () => {
     setLoading(true); // Set loading state to true while fetching data
     try {
       const token = getAuthToken();
-      console.log('DEBUG: fetchDevices() - getAuthToken() = ' + token);
-
       if (!token) {
         setErrorMessage('No authorization token found');
         setLoading(false);  // Set loading state to false after handling the error
@@ -94,7 +84,6 @@ const DeviceDashboard = () => {
       console.log('DEBUG: auth_token still not expire')
       // First attempt to fetch devices with the current token
       try {
-        console.log(`DEBUG: fetchDevices() - Try1 - Authorization Header: , Bearer = ${token}`);
         const response = await axios.get(`http://127.0.0.1:8000/api/get_user_devices/`, {
           headers: { Authorization: `Bearer ${token}` },
         });
@@ -109,9 +98,6 @@ const DeviceDashboard = () => {
           try {
             const newToken = await refreshAuthToken();
             // Retry the device fetch with the new token
-
-            console.log(`DEBUG: fetchDevices() - Try2 - Authorization Header: Bearer = ${newToken}`);
-
             const response = await axios.get(`http://127.0.0.1:8000/api/get_user_devices/`, {
               headers: { Authorization: `Bearer ${newToken}` },
             });
@@ -212,8 +198,6 @@ const DeviceDashboard = () => {
       )}
     </div>
   );
-
-  
 };
 
 export default DeviceDashboard;

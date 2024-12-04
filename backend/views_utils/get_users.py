@@ -9,6 +9,7 @@ import inspect
 
 from rest_framework.permissions import AllowAny
 from rest_framework.decorators import api_view, permission_classes
+import datetime
 
 #User = get_user_model()
 User = Guest
@@ -46,6 +47,6 @@ def get_users(request):
         return paginator.get_paginated_response(serializer.data)
     
     except Exception as e:
-        print(f"""{inspect.currentframe().f_code.co_name}(): Error - {e}""")
+        print(f"""{datetime.now()}: {inspect.currentframe().f_code.co_name}(): Error - {e}""")
         return Response({"error": "Cannot show users!"}, status=status.HTTP_400_BAD_REQUEST)
 

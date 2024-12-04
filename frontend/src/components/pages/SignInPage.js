@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import { jwtDecode } from "jwt-decode";
 
 const LoginPage = () => {
   // State variables for the form fields and error messages
@@ -24,9 +25,16 @@ const LoginPage = () => {
             },
         });
         // Response contains a token
-        localStorage.setItem('auth_token', response.data.token);
+        localStorage.setItem('access_token', response.data.access_token);
         localStorage.setItem('refresh_token', response.data.refresh_token); 
         
+        console.log('DEBUG: Access Token:', localStorage.getItem('access_token'));
+        console.log('DEBUG: Refresh Token:', localStorage.getItem('refresh_token'));
+
+        const token = localStorage.getItem('access_token')
+        const decodedToken = jwtDecode(token); // jwtDecode is a function you can use from the 'jwt-decode' library
+        console.log("DEBUG: SignIn - Token expiry: ", new Date(decodedToken.exp * 1000)); // Convert from seconds to milliseconds
+
         setLoading(false);
 
         // Redirect landing page

@@ -1,30 +1,33 @@
-from rest_framework import status
-from rest_framework.decorators import api_view
-from rest_framework.response import Response
-from backend.models import Guest 
-from backend.models_utils.auth_backend import EmailBackend
-from backend.serializers import GuestSerializer
-from django.contrib.auth import authenticate
-from rest_framework.authtoken.models import Token
+# import block according to alphabetical order and PEP 8 conventions style guide.
 
-from rest_framework.permissions import AllowAny
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated
-
-from rest_framework_simplejwt.tokens import RefreshToken
-from rest_framework_simplejwt.authentication import JWTAuthentication
-from rest_framework.exceptions import AuthenticationFailed
-
-from backend.database.db_connect import DbConnect
-
-from datetime import datetime
+# Standard library imports
 import os
 import inspect
+from datetime import datetime
 import uuid
+import logging
+
+# Third-party imports
+from rest_framework import status
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.response import Response
+from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.views import TokenRefreshView
+from rest_framework.exceptions import AuthenticationFailed
+from rest_framework.authtoken.models import Token
+
+# Local application/library imports
+from backend.models import Guest
+from backend.models_utils.auth_backend import EmailBackend
+from backend.serializers import GuestSerializer
+from backend.database.db_connect import DbConnect
+
+# Set up a logger instance
+logger = logging.getLogger(__name__)
 
 def create_tokens_for_user(user):
     refresh = RefreshToken.for_user(user)
-    #access_token = str(refresh.get_token_backend())
     access_token = str(refresh.access_token)
     refresh_token = str(refresh)
     return access_token, refresh_token
@@ -47,7 +50,7 @@ def register_guest(request):
 
             # Validate the input data
             if not first_name or not last_name or not password or not email or not checkin_date or not checkout_date or not building_id or not floor_id or not room_id:
-                print(f"""{inspect.currentframe().f_code.co_name}(): Warning - All fields are required, please verify.""")
+                logger.warning(f"{inspect.currentframe().f_code.co_name}(): All fields are required, please verify.")
                 return Response({"error": "All fields are required, please verify."}, status=status.HTTP_400_BAD_REQUEST)
 
             # Create the new guest
@@ -62,12 +65,12 @@ def register_guest(request):
                 floor_id=floor_id,
                 room_id=room_id
             )
-            print(f"""{inspect.currentframe().f_code.co_name}(): Guest created with user_id: {guest.id}""")
+            logger.info(f"{inspect.currentframe().f_code.co_name}(): Guest created with user_id: {guest.id}")
 
             # Generate JWT tokens for the guest
             access_token, refresh_token = create_tokens_for_user(guest)
-            # print(f"Access Token: {access_token}")
-            # print(f"Refresh Token: {refresh_token}")
+            logger.info(f"{inspect.currentframe().f_code.co_name}(): Access Token: {access_token}")
+            logger.info(f"{inspect.currentframe().f_code.co_name}(): Refresh Token: {refresh_token}")
 
             # Serializer to return the guest data
             serializer = GuestSerializer(guest)
@@ -80,12 +83,13 @@ def register_guest(request):
                 "guest": serializer.data  # Return guest data
             }, status=status.HTTP_201_CREATED)
         else:
-            print(f"""{inspect.currentframe().f_code.co_name}(): Warning - method is not accepted""")
+            logger.warning(f"{inspect.currentframe().f_code.co_name}(): Method is not accepted")
             return Response({"error": "Cannot register!"}, status=status.HTTP_400_BAD_REQUEST)
     
     except Exception as e:
-        print(f"""{inspect.currentframe().f_code.co_name}(): Error - {e}""")
-        return Response({"error": f"""Cannot register! - {e}"""}, status=status.HTTP_400_BAD_REQUEST)
+        logger.exception(f"{inspect.currentframe().f_code.co_name}(): Error during registration: {e}")
+        return Response({"error": f"Cannot register! - {e}"}, status=status.HTTP_400_BAD_REQUEST)
+
 
 @api_view(["POST"])
 @permission_classes([AllowAny])  # Allow any user to login
@@ -96,6 +100,7 @@ def login_guest(request):
 
         # Check if email and password are provided
         if not email or not password:
+            logger.warning(f"{inspect.currentframe().f_code.co_name}(): All fields are required, please verify.")
             return Response({"error": "Email and password are required."}, status=status.HTTP_400_BAD_REQUEST)
 
         # Authenticate the user by using email as username
@@ -111,6 +116,7 @@ def login_guest(request):
 
         # Generate access and refresh tokens for the user
         access_token, refresh_token = create_tokens_for_user(user)
+        logger.info(f"{inspect.currentframe().f_code.co_name}(): Login successful for user: {user.id} with Access Token: {access_token}")
 
         # Return the tokens along with the user data
         return Response({
@@ -120,25 +126,48 @@ def login_guest(request):
         }, status=status.HTTP_200_OK)
 
     except Exception as e:
-        print(f"""{inspect.currentframe().f_code.co_name}(): Error - {e}""")
+        logger.exception(f"{inspect.currentframe().f_code.co_name}(): Error during login: {e}")
         return Response({"error": "Cannot login!"}, status=status.HTTP_400_BAD_REQUEST)
-    
 
-#@api_view(["GET"])
+
+@api_view(["POST"])
+@permission_classes([AllowAny])
+def refresh_token(request):
+    try:
+        refresh_token = request.data.get("refresh")
+        if not refresh_token:
+            logger.error(f"{inspect.currentframe().f_code.co_name}(): No refresh token provided")
+            return Response({"error": "No refresh token provided"}, status=400)
+
+        logger.info(f"{inspect.currentframe().f_code.co_name}(): Received refresh token: {refresh_token}")
+
+        # Create RefreshToken object from the refresh token
+        try:
+            refresh = RefreshToken(refresh_token)
+        except Exception as e:
+            logger.error(f"{inspect.currentframe().f_code.co_name}(): Invalid refresh token: {e}")
+            return Response({"error": "Invalid refresh token"}, status=400)
+
+        # Issue a new access token
+        access_token = str(refresh.access_token)
+        logger.info(f"{inspect.currentframe().f_code.co_name}(): Generated access token: {access_token}")
+
+        return Response({"access": access_token}, status=200)
+
+    except Exception as e:
+        logger.exception(f"{inspect.currentframe().f_code.co_name}(): Error during token refresh: {e}")
+        return Response({"error": str(e)}, status=400)
+
+
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def get_user_devices(request):
     root_path = os.path.abspath(os.path.join(os.path.realpath(__file__), ".."))
     db = DbConnect(root_path=root_path)
     try:
-        user = request.user
-        if not user.is_authenticated:
-            print(f"""{inspect.currentframe().f_code.co_name}(): Error - Invalid or expired token.""")
-            raise AuthenticationFailed('Invalid or expired token.')
-        
         # Get the guest ID
         user_id = request.user.id
-        print("user_id = ", user_id)
+        logger.info(f"{inspect.currentframe().f_code.co_name}(): Fetching devices for user_id: {user_id}")
 
         db.connect()
         sql_cmd = """
@@ -162,16 +191,15 @@ def get_user_devices(request):
         params = (user_id,)
         result = db.execute_query(sql_cmd, params)
 
-        response = Response()
-        if result != []:  
-            response = Response({"message": "Devices fetched successfully!", "guest_id": user_id, "data": result}, status=200)
+        if result:
+            logger.info(f"{inspect.currentframe().f_code.co_name}(): Devices fetched successfully for user_id: {user_id}")
+            return Response({"message": "Devices fetched successfully!", "user_id": user_id, "data": result}, status=status.HTTP_200_OK)
         else:
-            response = Response({"message": "There is no device!", "guest_id": user_id, "data": result}, status=200)
-        #
-        return response
+            logger.info(f"{inspect.currentframe().f_code.co_name}(): No device found for user_id: {user_id}")
+            return Response({"message": "No device found for user.", "user_id": user_id, "data": result}, status=status.HTTP_200_OK)
     
     except Exception as e:
-        print(f"""{inspect.currentframe().f_code.co_name}(): Error - {e}""")
+        logger.exception(f"{inspect.currentframe().f_code.co_name}(): Error fetching devices: {e}")
         return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
     finally:

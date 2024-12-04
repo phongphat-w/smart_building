@@ -2,6 +2,7 @@ from rest_framework.response import Response
 from django.shortcuts import render
 from backend.database.db_connect import DbConnect
 import os
+import datetime
 import inspect
 
 root_path = os.path.abspath(os.path.join(os.path.realpath(__file__), "..", ".."))
@@ -20,7 +21,7 @@ def get_building(request, building_id):
         
         db.close()
     except Exception as e:
-        print(f"""{inspect.currentframe().f_code.co_name}(): Error - {e}""")
+        print(f"""{datetime.now()}: {inspect.currentframe().f_code.co_name}(): Error - {e}""")
         db.close()
         return Response({"message": "Get info fail!", "building_id": building_id}, status=400)
 
@@ -39,7 +40,7 @@ def get_floor(request, building_id, floor_id):
         #
         db.close()
     except Exception as e:
-        print(f"""{inspect.currentframe().f_code.co_name}(): Error - {e}""")
+        print(f"""{datetime.now()}: {inspect.currentframe().f_code.co_name}(): Error - {e}""")
         db.close()
         return Response({"message": "Get info fail!", "building_id": building_id, "floor_id": floor_id}, status=400)
 
@@ -58,6 +59,6 @@ def get_room(request, building_id, floor_id, room_id):
         #
         db.close()
     except Exception as e:
-        print(f"""{inspect.currentframe().f_code.co_name}(): Error - {e}""")
+        print(f"""{datetime.now()}: {inspect.currentframe().f_code.co_name}(): Error - {e}""")
         db.close()
         return Response({"message": "Get info fail!", "building_id": building_id, "floor_id": floor_id, "room_id": room_id}, status=400)
