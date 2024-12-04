@@ -1,8 +1,8 @@
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
-from .models import IoTDevice
-from .serializers import IoTDeviceSerializer
+from ..models import IoTDevice
+from ..serializers import IoTDeviceSerializer
 
 @api_view(["POST"])
 def control_device(request, device_id):

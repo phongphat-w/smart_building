@@ -33,9 +33,10 @@ urlpatterns = [
     #Admin
     path("api/get_users/", views.get_users),
 
-    path("api/building/<str:building_id>/",views.get_building),
-    path("api/floor/<str:building_id>/<str:floor_id>/",views.get_floor),
-    path("api/room/<str:building_id>/<str:floor_id>/<str:room_id>/",views.get_room),
+    path("api/adevices/<str:account_id>/",views.get_account_devices),
+    path("api/bdevices/<str:account_id>/<str:building_id>/",views.get_building_devices),
+    path("api/fdevices/<str:account_id>/<str:building_id>/<str:floor_id>/",views.get_floor_devices),
+    path("api/rdevices/<str:account_id>/<str:building_id>/<str:floor_id>/<str:room_id>/",views.get_room_devices),
     
     
 ]

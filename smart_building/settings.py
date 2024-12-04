@@ -12,14 +12,67 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 
 from pathlib import Path
 import os
-from dotenv import load_dotenv
+# from dotenv import load_dotenv
 from datetime import datetime, timedelta
 from logging.handlers import TimedRotatingFileHandler
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+os.environ["BASE_DIR"] = str(BASE_DIR)
 
-load_dotenv(dotenv_path = os.path.join(BASE_DIR, "configuration", ".env"))
+
+#Django
+SB__DJANGO_DEBUG = True
+SB__DJANGO_DB_HOST = "localhost"
+SB__DJANGO_DB_PORT = "5432"
+SB__DJANGO_DB_NAME = "smart_building"
+SB__DJANGO_DB_USER = "postgres"
+SB__DJANGO_DB_PASSWORD = "password"
+
+## Local DB
+#SQLite
+SB__GEN_DATA_FREQUENCY = "5" #Second
+os.environ["SB__GEN_DATA_FREQUENCY"] = SB__GEN_DATA_FREQUENCY
+
+#IOT Json configuration file
+SB__GEN_DATA_MODE = "1" #Auto generate
+os.environ["SB__GEN_DATA_MODE"] = SB__GEN_DATA_MODE
+
+#TimeScaleDB
+SB__TIMESCALEDB_DB_HOST = "localhost"
+SB__TIMESCALEDB_DB_PORT = "5432"
+SB__TIMESCALEDB_DB_NAME = "smart_building"
+SB__TIMESCALEDB_DB_USER = "postgres"
+SB__TIMESCALEDB_DB_PASSWORD = "password"
+os.environ["SB__TIMESCALEDB_DB_HOST"] = SB__TIMESCALEDB_DB_HOST
+os.environ["SB__TIMESCALEDB_DB_PORT"] = SB__TIMESCALEDB_DB_PORT
+os.environ["SB__TIMESCALEDB_DB_NAME"] = SB__TIMESCALEDB_DB_NAME
+os.environ["SB__TIMESCALEDB_DB_USER"] = SB__TIMESCALEDB_DB_USER
+os.environ["SB__TIMESCALEDB_DB_PASSWORD"] = SB__TIMESCALEDB_DB_PASSWORD
+
+SB__USER_ADMIN_ID = "55a6d8ae-e242-45c1-8bd0-db4975cc366a"
+os.environ["SB__USER_ADMIN_ID"] = SB__DJANGO_DB_HOST
+
+
+#Kafka server
+SB__KAFKA_HOST = "localhost"
+SB__KAFKA_PORT = "9092"
+SB__KAFKA_DATA_FREQUENCY = "5" #Second
+os.environ["SB__KAFKA_HOST"] = SB__KAFKA_HOST
+os.environ["SB__KAFKA_PORT"] = SB__KAFKA_PORT
+os.environ["SB__KAFKA_DATA_FREQUENCY"] = SB__KAFKA_DATA_FREQUENCY
+
+
+#======================================
+#Front-end (React.js)
+#======================================
+SB__API_HOST = "127.0.0.1"
+SB__API_PORT = "8080"
+os.environ["SB__API_HOST"] = SB__API_HOST
+os.environ["SB__API_PORT"] = SB__API_PORT
+
+
+#load_dotenv(dotenv_path = os.path.join(BASE_DIR, "configuration", ".env"))
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
@@ -62,7 +115,11 @@ REST_FRAMEWORK = {
     ],
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.TokenAuthentication',
-    ],    
+    ],
+    'DEFAULT_RENDERER_CLASSES': [
+        'rest_framework.renderers.JSONRenderer',
+        # 'rest_framework.renderers.BrowsableAPIRenderer',  # for browser interface
+    ], 
     'TOKEN_MODEL': 'backend.models_utils.token_uuid.UUIDToken',  # Custom token model
 }
 

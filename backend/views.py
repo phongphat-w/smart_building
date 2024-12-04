@@ -2,7 +2,7 @@
 from backend.views_utils.guest import register_guest, login_guest, refresh_token, get_user_devices
 
 #Admin
-from backend.views_utils.get_users import get_users
+from backend.views_utils.users import get_users
 
-#Building
-from backend.views_utils.building import get_building, get_floor, get_room
+#Building's IOT devices
+from backend.views_utils.devices import get_account_devices, get_building_devices, get_floor_devices, get_room_devices

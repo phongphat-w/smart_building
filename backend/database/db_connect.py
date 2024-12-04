@@ -1,15 +1,27 @@
+# Import block according to Python Enhancement Proposal 8 (PEP 8) guidelines.
+
+# Standard library imports
+import inspect
+import json
+import logging
+import os
+#from dotenv import load_dotenv
+
+# Third-party imports
 import psycopg2
 from psycopg2.extras import RealDictCursor
-import json
-import os
-from dotenv import load_dotenv
-import inspect
+
+# Local application/library imports
+# N/A
+
+# Set up a logger instance
+logger = logging.getLogger(__name__)
 
 class DbConnect:
-    def __init__(self, root_path):
+    def __init__(self):
         self.connection = None
         self.cursor = None
-        load_dotenv(dotenv_path = os.path.join(root_path, "configuration", ".env"))
+        #load_dotenv(dotenv_path = os.path.join(root_path, "configuration", ".env"))
 
     def connect(self):
         try:
@@ -28,6 +40,7 @@ class DbConnect:
 
         except Exception as e:
             print(f"""{inspect.currentframe().f_code.co_name}(): Error - {e}""")
+            logger.error(f"{inspect.currentframe().f_code.co_name}(): {e}")
             raise Exception("Unable to connect to the database.")
 
     #Execute a query and return results.
@@ -38,8 +51,9 @@ class DbConnect:
             print(f"Query executed successfully: {query}")
             return json.loads(json.dumps(self.cursor.fetchall()))
         except Exception as e:
-            print(f"""{inspect.currentframe().f_code.co_name}(): Query - {query}""")
             print(f"""{inspect.currentframe().f_code.co_name}(): Error - {e}""")
+            print(f"""{inspect.currentframe().f_code.co_name}(): Query - {query}""")
+            logger.error(f"{inspect.currentframe().f_code.co_name}(): {e}")
             self.connection.rollback()
             return json.dumps([])
 

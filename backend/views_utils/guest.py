@@ -1,11 +1,11 @@
-# import block according to alphabetical order and PEP 8 conventions style guide.
+# Import block according to Python Enhancement Proposal 8 (PEP 8) guidelines.
 
 # Standard library imports
-import os
+import datetime
 import inspect
-from datetime import datetime
-import uuid
 import logging
+import os
+import uuid
 
 # Third-party imports
 from rest_framework import status
@@ -18,10 +18,11 @@ from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.authtoken.models import Token
 
 # Local application/library imports
+from backend.database.db_connect import DbConnect
 from backend.models import Guest
 from backend.models_utils.auth_backend import EmailBackend
 from backend.serializers import GuestSerializer
-from backend.database.db_connect import DbConnect
+
 
 # Set up a logger instance
 logger = logging.getLogger(__name__)
@@ -87,6 +88,7 @@ def register_guest(request):
             return Response({"error": "Cannot register!"}, status=status.HTTP_400_BAD_REQUEST)
     
     except Exception as e:
+        print(f"""{datetime.now()}: {inspect.currentframe().f_code.co_name}(): Error - {e}""")
         logger.exception(f"{inspect.currentframe().f_code.co_name}(): Error during registration: {e}")
         return Response({"error": f"Cannot register! - {e}"}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -126,6 +128,7 @@ def login_guest(request):
         }, status=status.HTTP_200_OK)
 
     except Exception as e:
+        print(f"""{datetime.now()}: {inspect.currentframe().f_code.co_name}(): Error - {e}""")
         logger.exception(f"{inspect.currentframe().f_code.co_name}(): Error during login: {e}")
         return Response({"error": "Cannot login!"}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -145,6 +148,7 @@ def refresh_token(request):
         try:
             refresh = RefreshToken(refresh_token)
         except Exception as e:
+            print(f"""{datetime.now()}: {inspect.currentframe().f_code.co_name}(): Error - {e}""")
             logger.error(f"{inspect.currentframe().f_code.co_name}(): Invalid refresh token: {e}")
             return Response({"error": "Invalid refresh token"}, status=400)
 
@@ -155,6 +159,7 @@ def refresh_token(request):
         return Response({"access": access_token}, status=200)
 
     except Exception as e:
+        print(f"""{datetime.now()}: {inspect.currentframe().f_code.co_name}(): Error - {e}""")
         logger.exception(f"{inspect.currentframe().f_code.co_name}(): Error during token refresh: {e}")
         return Response({"error": str(e)}, status=400)
 
@@ -199,6 +204,7 @@ def get_user_devices(request):
             return Response({"message": "No device found for user.", "user_id": user_id, "data": result}, status=status.HTTP_200_OK)
     
     except Exception as e:
+        print(f"""{datetime.now()}: {inspect.currentframe().f_code.co_name}(): Error - {e}""")
         logger.exception(f"{inspect.currentframe().f_code.co_name}(): Error fetching devices: {e}")
         return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
