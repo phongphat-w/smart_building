@@ -30,6 +30,8 @@ def get_account_devices(request, account_id):
             SELECT 
             a.iot_device_id::char(36)
             , a. building_id
+            , a. floor_id
+            , a. room_id
             , a.device_sub_type_id
             , b.device_sub_type_name
             , b.device_type_id
@@ -51,7 +53,7 @@ def get_account_devices(request, account_id):
             Inner Join country f On e.country_id = f.country_id
             Inner Join continent g On f.continent_id = g.continent_id
             Where a.account_id = %s
-            ORDER BY b.device_type_id ASC 
+            ORDER BY a.account_id, a.building_id, a.floor_id, a.room_id, b.device_type_id ASC 
         """
         params = (account_id,)
         result = db.execute_query(sql_cmd, params)
@@ -80,6 +82,8 @@ def get_building_devices(request, account_id, building_id):
             SELECT 
             a.iot_device_id::char(36)
             , a. building_id
+            , a. floor_id
+            , a. room_id
             , a.device_sub_type_id
             , b.device_sub_type_name
             , b.device_type_id
@@ -102,7 +106,7 @@ def get_building_devices(request, account_id, building_id):
             Inner Join continent g On f.continent_id = g.continent_id
             Where a.account_id = %s
             And a.building_id = %s
-            ORDER BY b.device_type_id ASC 
+            ORDER BY a.account_id, a.building_id, a.floor_id, a.room_id, b.device_type_id ASC 
         """
         params = (account_id, building_id,)
         result = db.execute_query(sql_cmd, params)
@@ -131,6 +135,8 @@ def get_floor_devices(request, account_id, building_id, floor_id):
             SELECT 
             a.iot_device_id::char(36)
             , a. building_id
+            , a. floor_id
+            , a. room_id
             , a.device_sub_type_id
             , b.device_sub_type_name
             , b.device_type_id
@@ -154,7 +160,7 @@ def get_floor_devices(request, account_id, building_id, floor_id):
             Where a.account_id = %s
             And a.building_id = %s
             And a.floor_id = %s
-            ORDER BY b.device_type_id ASC 
+            ORDER BY a.account_id, a.building_id, a.floor_id, a.room_id, b.device_type_id ASC 
         """
         params = (account_id, building_id, floor_id)
         result = db.execute_query(sql_cmd, params)
@@ -183,6 +189,8 @@ def get_room_devices(request, account_id, building_id, floor_id, room_id):
             SELECT 
             a.iot_device_id::char(36)
             , a. building_id
+            , a. floor_id
+            , a. room_id
             , a.device_sub_type_id
             , b.device_sub_type_name
             , b.device_type_id
@@ -207,7 +215,7 @@ def get_room_devices(request, account_id, building_id, floor_id, room_id):
             And a.building_id = %s
             And a.floor_id = %s
             And a.room_id = %s
-            ORDER BY b.device_type_id ASC
+            ORDER BY a.account_id, a.building_id, a.floor_id, a.room_id, b.device_type_id ASC 
         """
         params = (account_id, building_id, floor_id, room_id)
         result = db.execute_query(sql_cmd, params)
