@@ -33,6 +33,50 @@ def create_tokens_for_user(user):
     refresh_token = str(refresh)
     return access_token, refresh_token
 
+def get_user_info(email):
+    db = DbConnect()
+    try:
+        if email == "":
+            return "[]" #Json empty
+        #
+        db.connect()
+        sql_cmd = """
+                SELECT
+                DISTINCT
+                a.id::char(36)
+                , a.first_name
+                , a.last_name
+                , a.checkin_date::text
+                , a.checkout_date::text
+                , a.building_id
+                , a.floor_id
+                , a.room_id
+                , a.is_active
+                , a.is_admin
+                , a.is_staff
+                , a.last_login::text
+                , b.account_id
+                FROM backend_guest a
+                INNER JOIN iot_device b on (a.building_id = b.building_id) AND (a.floor_id = b.floor_id) AND (a.room_id = b.room_id)
+                WHERE a.email = %s;
+            """
+        params = (email,)
+        result = db.execute_query(sql_cmd, params)
+
+        if result:
+            return result #Json
+        else:
+            return "[]" #Json empty
+        
+        db.close()
+    except Exception as e:
+        print(f"""{datetime.now()}: {inspect.currentframe().f_code.co_name}(): Error - {e}""")
+        logger.exception(f"{inspect.currentframe().f_code.co_name}(): Error fetching user info: {e}")
+        return "[]" #Json empty
+        db.close()
+
+        
+
 @api_view(["POST"])
 @permission_classes([AllowAny])  # Allow any user to register
 def register_guest(request):
@@ -119,13 +163,18 @@ def login_guest(request):
         # Generate access and refresh tokens for the user
         access_token, refresh_token = create_tokens_for_user(user)
         logger.info(f"{inspect.currentframe().f_code.co_name}(): Login successful for user: {user.id} with Access Token: {access_token}")
-
-        # Return the tokens along with the user data
-        return Response({
-            "message": "Login successful",
-            "sb_access_token": access_token,  # Return access token, short-lived token
-            "sb_refresh_token": refresh_token,  # Return refresh token, long-lived token
-        }, status=status.HTTP_200_OK)
+        
+        user_info = get_user_info(email)
+        if user_info == "[]":
+            return Response({"error": "Cannot get user information"}, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            print("DEBUG: user_info = ", user_info)
+            return Response({
+                "message": "Login successful",
+                "sb_access_token": access_token,  # Return access token, short-lived token
+                "sb_refresh_token": refresh_token,  # Return refresh token, long-lived token
+                "sb_user_info": user_info, # User info
+            }, status=status.HTTP_200_OK)
 
     except Exception as e:
         print(f"""{datetime.now()}: {inspect.currentframe().f_code.co_name}(): Error - {e}""")
@@ -167,8 +216,7 @@ def refresh_token(request):
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def get_user_devices(request):
-    root_path = os.path.abspath(os.path.join(os.path.realpath(__file__), ".."))
-    db = DbConnect(root_path=root_path)
+    db = DbConnect()
     try:
         # Get the guest ID
         user_id = request.user.id

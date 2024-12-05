@@ -47,8 +47,9 @@ class Guest(AbstractBaseUser):
     building_id = models.CharField(default="000",max_length=3)
     floor_id = models.CharField(default="0000", max_length=4)
     room_id = models.CharField(default="00000",max_length=5)
-    is_active = models.BooleanField(default=True)
+    is_active = models.BooleanField(default=True) #False, if require activation by email
     is_admin = models.BooleanField(default=False)
+    is_staff = models.BooleanField(default=False)
 
     USERNAME_FIELD = "email"
 

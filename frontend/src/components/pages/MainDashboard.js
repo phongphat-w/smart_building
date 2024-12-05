@@ -1,8 +1,11 @@
-import React, { useEffect, useState, useRef  } from 'react';
+import React, { useEffect, useState, useRef, useCallback  } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { jwtDecode } from "jwt-decode";
 import axios from 'axios';
 import { Modal, Button, Card, Row, Col } from 'react-bootstrap';
 import { FaThermometerHalf, FaLightbulb, FaCloudSun, FaFan, FaCamera, FaSearch, FaMapMarkerAlt, 
-  FaUsers, FaWater, FaRecycle, FaBatteryHalf, FaWindows, FaChild  } from 'react-icons/fa'; // Importing icons
+  FaUsers, FaWater, FaRecycle, FaBatteryHalf, FaWindows, FaChild, 
+  FaLock} from 'react-icons/fa'; // Importing icons
 
   // import ReactMapGL, { Marker, NavigationControl } from 'react-map-gl';
 import mapboxgl from 'mapbox-gl';
@@ -22,12 +25,17 @@ import '../../App.css'; // Custom CSS for styling
 ChartJS.register(CategoryScale, LinearScale, ArcElement, PointElement, LineElement, Title, Tooltip, Legend);
 
 // Access your environment variables
-const API_URL = process.env.SB__API_URL + ":" + process.env.SB__API_PORT;
-const MAPBOX_API_KEY = process.env.SB__MAP_TOKEN;
+const API_URL = process.env.REACT_APP_SB__API_URL + ":" + process.env.REACT_APP_SB__API_PORT;
+// const MAPBOX_API_KEY = process.env.REACT_APP_SB__MAP_TOKEN;
+const MAPBOX_API_KEY = "--";
 
 console.log('DEBUG: API_URL = ' + API_URL);
 console.log('DEBUG: MAPBOX_API_KEY = ' + MAPBOX_API_KEY);
 
+// Function to get the token from localStorage
+const getAuthToken = () => localStorage.getItem('sb_access_token');
+const getRefreshToken = () => localStorage.getItem('sb_refresh_token');
+const getUserInfo = () => localStorage.getItem('sb_user_info');
 
 const MainDashboard = () => {
   const [deviceData, setDeviceData] = useState([]);
@@ -36,74 +44,166 @@ const MainDashboard = () => {
   const [chartDataElecFloor, setChartDataElecFloor] = useState(null);
   const [chartDataElec, setChartDataElec] = useState(null);
   const [chartDataWater, setChartDataWater] = useState(null);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [loginDisplay, setLoginDisplay] = useState(false);
+  const navigate = useNavigate();
 
   const mapContainerRef = useRef(null);
   const mapRef = useRef(null);
 
-  const url_acccout = '/api/adevices/defb76a0-7ff4-4bdf-8100-a2edd5183ef6/';
-  const url_building = '/api/bdevices/defb76a0-7ff4-4bdf-8100-a2edd5183ef6/001/';
-  const url_floor = '/api/fdevices/defb76a0-7ff4-4bdf-8100-a2edd5183ef6/001/0001/';
-  const url_room = '/api/rdevices/defb76a0-7ff4-4bdf-8100-a2edd5183ef6/001/0001/00001';
-    
-  // Fetch device data from API
-  useEffect(() => {    
-    axios.get(`${API_URL}${url_acccout}`) // Account 1
-      .then((response) => {
-        const data = response.data; // Access the data
-        if (data && Array.isArray(data.data)) {
-          setDeviceData(data.data); // Set the device data
-          
-          // Generate chart data after fetching device data
-          genDataElecFloor();
-          genDataElec();
-          genDataWater();
+  const token = getAuthToken();
+  const decodedToken = jwtDecode(token); // jwtDecode is a function use from the 'jwt-decode' library
+  console.log("DEBUG: Dashbaord - Token expiry: ", new Date(decodedToken.exp * 1000)); // Convert from seconds to milliseconds
 
-          // Set the map center based on the country name from the first device's country_name
-          // const country = data.data[0]?.country_name;
-          // getCountryCoordinates(country); // Fetch the country coordinates
+  // SignOut function - used to remove tokens from localStorage
+  const signOut = useCallback(() => {
+    console.log("DEBUG: signOut() - is working")
+    localStorage.removeItem('sb_access_token');  // Remove access token
+    localStorage.removeItem('sb_refresh_token');  // Remove refresh token
+    localStorage.removeItem('sb_user_info');  // Remove refresh token
+    // console.log("DEBUG: 2 tokens are removed")
+    navigate('/signin');  // Redirect to Sign In page
+  }, [navigate]);
+
+  
+  //========================================
+  // Fetch device for all roles
+  //========================================
+  useEffect(() => {
+    const userInfo = JSON.parse(getUserInfo());
+    if (!userInfo || !userInfo[0]?.account_id) {
+      console.error("Invalid or missing user info:", userInfo);
+      return;
+    }
+    
+    let roleName = '';
+    let urlDevices = "";
+    const url_account = `/api/adevices/${userInfo[0].account_id}/`;
+  
+    if (userInfo[0].is_admin) {
+      roleName = 'Administrator';
+      urlDevices = `${API_URL}${url_account}`;
+    } else if (userInfo[0].is_staff) {
+      roleName = 'Staff';
+      urlDevices = `${API_URL}/api/fdevices/${userInfo[0].account_id}/${userInfo[0].building_id}/${userInfo[0].floor_id}/`;
+    } else {
+      roleName = 'Guest';
+      urlDevices = `${API_URL}/api/rdevices/${userInfo[0].account_id}/${userInfo[0].building_id}/${userInfo[0].floor_id}/${userInfo[0].room_id}`;
+    }
+    
+    console.log("DEBUG: Constructed URL:", urlDevices); 
+
+    axios.get(urlDevices)
+      .then((response) => {
+        const data = response.data;
+        if (data && Array.isArray(data.data)) {
+          setDeviceData(data.data);
         } else {
-          console.error('Expected data to be an array but got:', data);
+          console.error("Unexpected response format:", data);
         }
       })
       .catch((error) => {
-        console.error('Error fetching data:', error);
+        console.error("Error fetching data:", error);
       });
-  }, []); // Empty dependency array for fetching data once on mount
+    
+    setIsAdmin(String(userInfo[0].is_admin));
+    setLoginDisplay(userInfo[0].first_name + ' ' + userInfo[0].first_name + ' (' + roleName + ')' );
 
-  // Fetch device data from API
+  }, []);
+  
+  //========================================
+  // Fetch data for overview
+  //========================================
+  useEffect(() => {
+    let roleName = ""
+    let urlDevices = ''
+  
+    console.log("DEBUG: useEffect1() - is working")
+    const token = getAuthToken();
+
+    console.log("DEBUG: useEffect() -  token = " + token)
+
+    if (!token) {
+      navigate('/signin'); // Redirect if no token
+      console.log("DEBUG: useEffect1() -  check token = " + token)
+    }
+
+    const userInfo = JSON.parse(getUserInfo());
+    console.log("DEBUG: userInfo = " + userInfo)
+
+    // API URL
+    const url_account = `/api/adevices/${userInfo[0].account_id}/`;
+   
+    if (String(userInfo[0].is_admin) === 'true'){ //Admin
+        urlDevices = `${API_URL}${url_account}`;
+        console.log("DEBUG: Admin login")
+        //
+        axios.get(urlDevices).then((response) => {
+          const data = response.data; // Access the data
+          if (data && Array.isArray(data.data)) {
+            setDeviceData(data.data); // Set the device data
+            
+            // Generate chart data after fetching device data
+            genDataElecFloor();
+            genDataElec();
+            genDataWater();
+
+          } else {
+            console.error('Expected data to be an array but got:', data);
+          }
+        })
+        .catch((error) => {
+          console.error('Error fetching data:', error);
+        });
+        //
+    }else{
+        console.log('DEBUG: User or staff login');
+    }
+    
+  }, [navigate]); // Empty dependency array for fetching data once on mount
+
+
+  //========================================
+  //Fetch data for overview - map
+  //========================================
   useEffect(() => {
     // Initialize the map once the component is mounted
-    mapboxgl.accessToken = MAPBOX_API_KEY;
+    if (!mapContainerRef.current){
+      console.log('Map container ref is not available');
+    }else{
+      mapboxgl.accessToken = MAPBOX_API_KEY;
 
-    // Create a new Map instance
-    mapRef.current = new mapboxgl.Map({
-      container: mapContainerRef.current,  // container reference
-      center: [100.5018, 13.7563],  // initial position [lng, lat]
-      zoom: 9,  // initial zoom level
-      style: 'mapbox://styles/mapbox/streets-v12' // Map style
-    });
+      // Create a new Map instance
+      mapRef.current = new mapboxgl.Map({
+        container: mapContainerRef.current,  // container reference
+        center: [100.5018, 13.7563],  // initial position [lng, lat]
+        zoom: 9,  // initial zoom level
+        style: 'mapbox://styles/mapbox/streets-v12' // Map style
+      });
 
-    // Add NavigationControl (zoom and rotation)
-    const nav = new mapboxgl.NavigationControl({
-      visualizePitch: true
-    });
-    mapRef.current.addControl(nav, 'top-right');  // Position it at the top-right corner
+      // Add NavigationControl (zoom and rotation)
+      const nav = new mapboxgl.NavigationControl({
+        visualizePitch: true
+      });
+      mapRef.current.addControl(nav, 'top-right');  // Position it at the top-right corner
 
-    // Add Fullscreen control
-    mapRef.current.addControl(new mapboxgl.FullscreenControl(), 'bottom-right');
+      // Add Fullscreen control
+      mapRef.current.addControl(new mapboxgl.FullscreenControl(), 'bottom-right');
 
-    // Add a draggable marker
-    const marker = new mapboxgl.Marker({ color: "red", draggable: true })
-      .setLngLat([100.5018, 13.7563]) // Set the marker's coordinates (long, lat)
-      .addTo(mapRef.current);
+      // Add a draggable marker
+      const marker = new mapboxgl.Marker({ color: "red", draggable: true })
+        .setLngLat([100.5018, 13.7563]) // Set the marker's coordinates (long, lat)
+        .addTo(mapRef.current);
 
-    // Cleanup: Remove the map instance on unmount
-    return () => {
-      if (mapRef.current) {
-        mapRef.current.remove();  // Properly remove map instance
-      }
-    };
+      // Cleanup: Remove the map instance on unmount
+      return () => {
+        if (mapRef.current) {
+          mapRef.current.remove();  // Properly remove map instance
+        }
+      };
+    } //End of 'else'
   }, []); // Run only once on mount
+
 
   // Generate chart data
   const genDataElecFloor = (deviceId) => {
@@ -158,7 +258,7 @@ const MainDashboard = () => {
         },
         {
           label: "2024",
-          data: [7, 8.80, 9.00, 9.50, 10.00, 10.50, 11.00, 11.50, 12.00, 12.50, 13.50],
+          data: [3.00, 3.50, 4.00, 4.50, 5.00, 5.50, 6.00, 6.50, 7.00, 7.50, 8.50],
           fill: true,
           backgroundColor: "rgba(173, 216, 230, 0.5)", // Pastel blue
           borderColor: "rgba(173, 216, 230, 1)", // Border pastel blue
@@ -240,7 +340,7 @@ const MainDashboard = () => {
       case '3382ead3-4c22-4fac-bc92-d2cc11e94564': //'Air Conditioning':
         return <FaFan size={30} color='green'/>;
       case '2a66e85b-2e08-4a82-9617-f6ba6ab55cca': //'Smart cameras':
-        return <FaCamera size={30} />;
+        return <FaCamera size={30} color='gray' />;
       case 'c0ec3c70-b76f-45e0-9297-8b5a4a462a47': //'Smart bulbs and LED lights':
         return <FaLightbulb size={30} color='orange' />;
       case 'f531b9c1-c46a-42c4-989d-1d5be315f6a6': //'Smart meters':
@@ -248,11 +348,11 @@ const MainDashboard = () => {
       case '3e6448c0-eea1-4f8d-bfc1-366685232a83': //'Leak detection sensors':
         return <FaWater size={30} color='blue' />;
       case '2dcc0b13-ff3a-445d-b6c8-a92b05bbba6c': //'Smart bins':
-        return <FaRecycle size={30} color='gray' />;
+        return <FaRecycle size={30} color='brown' />;
       case '69b29098-c768-423e-ac2e-cc443e18f8a9': //'Automated blinds or shades':
-        return <FaWindows size={30} />;
+        return <FaWindows size={30} color='rgba(255, 182, 193, 1)' />;// Border pastel pink
       case '96b38698-d9ad-4355-807f-5580397471a1': //'Presence sensors':
-        return <FaChild size={30} color='gray' />;
+        return <FaChild size={30} color='rgba(173, 216, 230, 1)' />; // Solid pastel blue
       default:
         return <FaSearch size={30} />;
     }
@@ -266,99 +366,111 @@ const MainDashboard = () => {
     padding: '20px',
   };
 
+  // const userInfo = JSON.parse(getUserInfo());
+
   return (
     <div className="MainDashboard" style={{ padding: '20px' }}>
-      <header>
-        <br />
-        <center><h1>Smart Building Dashboard</h1></center>
-      </header>
-
-      {/* Show client info */}
-      <Row className="justify-content-center">
-        <Col md={6} sm={12} xs={14}>
-          <Card style={cardStyle}>
-            <Card.Body>
-              <Card.Title>Client Info</Card.Title>
-              <Card.Text>
-                <FaUsers style={{ fontSize: '30px', color: '#007bff' }} /> <strong>{deviceData[0]?.client_name}</strong><br />
-                <strong>Account ID:</strong> {deviceData[0]?.account_id}<br />
-                <strong>Account Name:</strong> {deviceData[0]?.account_name}<br />
-                <strong>Country:</strong> {deviceData[0]?.country_name}<br />
-                <strong>Continent:</strong> {deviceData[0]?.continent_name}<br />
-                <strong>Time Zone:</strong> {deviceData[0]?.time_zone}<br />
-              </Card.Text>
-            </Card.Body>
-          </Card>
-        </Col>
-        <Col>
-          {/* Map container element */}
-          <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-            <div style={{ flex: 1 }}>
-              <div
-                ref={mapContainerRef}
-                style={{ height: '100%', width: '100%' }} // Takes the full height of the parent container
-              />
-            </div>
-          </div>
-         
-        </Col>
-      </Row>
-
-      <br/>
-      <Row className="justify-content-center">
-        <Col md={4} sm={6} xs={8}>
-          <Card>
-            <Card.Body>
-              <Card.Title>Electricity Usage (kWh/m<sup>2</sup>)</Card.Title>
-              <Card.Text>
-                <div id='chartDataElecFloor' style={{ height: '200px', width: '100%' }}>
-                    {chartDataElecFloor ? (
-                      <Pie data={chartDataElecFloor} />
-                    ) : (
-                      <p>Loading chart data...</p>
-                    )}
-                </div>
-              </Card.Text>
-            </Card.Body>
-          </Card>
-        </Col> 
-
-        <Col md={4} sm={6} xs={8}>
-          <Card>
-            <Card.Body>
-              <Card.Title>Electricity Bill (Million THB)</Card.Title>
-              <Card.Text>
-                <div id='chartDataElec' style={{ height: '200px', width: '100%' }}>
-                    {chartDataElec ? (
-                      <Line data={chartDataElec} />
-                    ) : (
-                      <p>Loading chart data...</p>
-                    )}
-                </div>
-              </Card.Text>
-            </Card.Body>
-          </Card>
-        </Col> 
-
-        <Col md={4} sm={6} xs={8}>
-          <Card>
-            <Card.Body>
-              <Card.Title>Water Consumption (m<sup>3</sup>)</Card.Title>
-              <Card.Text>
-                <div id='chartDataWater' style={{ height: '200px', width: '100%' }}>
-                    {chartDataWater ? (
-                      <Line data={chartDataWater} />
-                    ) : (
-                      <p>Loading chart data...</p>
-                    )}
-                </div>
-              </Card.Text>
-            </Card.Body>
-          </Card>
-        </Col> 
-
-      </Row>
+        <div>
+          <center><h1>Smart Building Dashboard</h1></center>
+        
+          {`Welcome: ${loginDisplay}`}
+          <button className="btn btn-primary btn-sm" onClick={signOut} style={{ position: 'absolute', top: '10px', right: '10px' }}>
+            <span class="glyphicon glyphicon-log-out"></span> Sign Out
+          </button>
+        </div>
       
+
+        {isAdmin === 'true' ? (
+        <div id='overview'>
+          <Row className="justify-content-center">
+            <Col md={6} sm={12} xs={14}>
+              <Card style={cardStyle}>
+                <Card.Body>
+                  <Card.Title>Client Info</Card.Title>
+                  <Card.Text>
+                    <FaUsers style={{ fontSize: '30px', color: '#007bff' }} /> <strong>{deviceData[0]?.client_name}</strong><br />
+                    <strong>Account ID:</strong> {deviceData[0]?.account_id}<br />
+                    <strong>Account Name:</strong> {deviceData[0]?.account_name}<br />
+                    <strong>Country:</strong> {deviceData[0]?.country_name}<br />
+                    <strong>Continent:</strong> {deviceData[0]?.continent_name}<br />
+                    <strong>Time Zone:</strong> {deviceData[0]?.time_zone}<br />
+                  </Card.Text>
+                </Card.Body>
+              </Card>
+            </Col>
+            <Col>
+              {/* Map container element */}
+              <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+                <div style={{ flex: 1 }}>
+                  <div
+                    ref={mapContainerRef}
+                    style={{ height: '100%', width: '100%' }} // Takes the full height of the parent container
+                  />
+                </div>
+              </div>
+            
+            </Col>
+          </Row>
+
+          <br/>
+          <Row className="justify-content-center">
+            <Col md={4} sm={6} xs={8}>
+              <Card>
+                <Card.Body>
+                  <Card.Title>Electricity Usage (kWh/m<sup>2</sup>)</Card.Title>
+                  <Card.Text>
+                    <div id='chartDataElecFloor' style={{ height: '200px', width: '100%' }}>
+                        {chartDataElecFloor ? (
+                          <Pie data={chartDataElecFloor} />
+                        ) : (
+                          <p>Loading chart data...</p>
+                        )}
+                    </div>
+                  </Card.Text>
+                </Card.Body>
+              </Card>
+            </Col> 
+
+            <Col md={4} sm={6} xs={8}>
+              <Card>
+                <Card.Body>
+                  <Card.Title>Electricity Bill (Million THB)</Card.Title>
+                  <Card.Text>
+                    <div id='chartDataElec' style={{ height: '200px', width: '100%' }}>
+                        {chartDataElec ? (
+                          <Line data={chartDataElec} />
+                        ) : (
+                          <p>Loading chart data...</p>
+                        )}
+                    </div>
+                  </Card.Text>
+                </Card.Body>
+              </Card>
+            </Col> 
+
+            <Col md={4} sm={6} xs={8}>
+              <Card>
+                <Card.Body>
+                  <Card.Title>Water Consumption (m<sup>3</sup>)</Card.Title>
+                  <Card.Text>
+                    <div id='chartDataWater' style={{ height: '200px', width: '100%' }}>
+                        {chartDataWater ? (
+                          <Line data={chartDataWater} />
+                        ) : (
+                          <p>Loading chart data...</p>
+                        )}
+                    </div>
+                  </Card.Text>
+                </Card.Body>
+              </Card>
+            </Col> 
+
+          </Row>
+        </div>  
+        ) : (
+          console.log('User is not Administrator')
+        )}
+
       <br />      
       {/* Devices Display */}
       <div className="devices-grid">
@@ -373,12 +485,14 @@ const MainDashboard = () => {
                       <div>{getDeviceIcon(device)}&nbsp;<h4>{device.device_type_name}</h4></div>
                     </div>
                     <div><h5>{device.device_sub_type_name}</h5></div>
-                    <div>Device ID: {device.iot_device_id}</div>
+                    
                     <div>                      
                       <strong>Building ID:</strong> {device.building_id}&nbsp;&nbsp;
                       <strong>Floor ID:</strong> {device.floor_id}&nbsp;&nbsp;
                       <strong>Room ID:</strong> {device.room_id}
                     </div>
+
+                    <div>Device ID: {device.iot_device_id}</div>
                     <br/>
                     <div className="device-status">
                       {/* Example of dynamic status */}

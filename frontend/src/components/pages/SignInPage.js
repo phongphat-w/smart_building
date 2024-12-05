@@ -2,16 +2,19 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import { jwtDecode } from "jwt-decode";
 
+const API_URL = process.env.REACT_APP_SB__API_URL + ":" + process.env.REACT_APP_SB__API_PORT;
+
 const LoginPage = () => {
-  // State variables for the form fields and error messages
+  // State variables for the form fields, error messages, and user info
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const [loading, setLoading] = useState(false);
+  const [userInfo, setUserInfo] = useState(null);
 
   // Handle form submission
   const handleSubmit = async (e) => {
-    e.preventDefault();
+    e.preventDefault(); // Prevent page refresh
     setLoading(true);
     setErrorMessage('');
 
@@ -19,29 +22,38 @@ const LoginPage = () => {
     const data = { email, password };
 
     try {
-        const response = await axios.post(`http://127.0.0.1:8000/api/login_guest/`, data, {
-            headers: {
-            'Content-Type': 'application/json',
-            },
-        });
-        // Response contains a token
-        localStorage.setItem('sb_access_token', response.data.sb_access_token);
-        localStorage.setItem('sb_refresh_token', response.data.sb_refresh_token); 
-        
-        console.log('DEBUG: Access Token:', localStorage.getItem('sb_access_token'));
-        console.log('DEBUG: Refresh Token:', localStorage.getItem('sb_refresh_token'));
+      const response = await axios.post(`${API_URL}/api/login_guest/`, data, {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
 
-        const token = localStorage.getItem('sb_access_token')
-        const decodedToken = jwtDecode(token); // jwtDecode is a function you can use from the 'jwt-decode' library
-        console.log("DEBUG: SignIn - Token expiry: ", new Date(decodedToken.exp * 1000)); // Convert from seconds to milliseconds
+      // Extract user info and tokens
+      const userInfo = response.data.sb_user_info;
+      setUserInfo(userInfo);
+      console.log("DEBUG: First Name:", userInfo[0].first_name);
 
-        setLoading(false);
+      localStorage.setItem('sb_access_token', response.data.sb_access_token);
+      localStorage.setItem('sb_refresh_token', response.data.sb_refresh_token);
+      localStorage.setItem('sb_user_info', JSON.stringify(userInfo)); // Store as JSON string
 
-        // Redirect landing page
-        window.location.href = '/dashboard';
+      console.log('DEBUG: Access Token:', localStorage.getItem('sb_access_token'));
+      console.log('DEBUG: Refresh Token:', localStorage.getItem('sb_refresh_token'));
+      console.log('DEBUG: User Info:', JSON.parse(localStorage.getItem('sb_user_info')));
+
+      // Decode and log token expiration
+      const token = response.data.sb_access_token;
+      const decodedToken = jwtDecode(token);
+      console.log("DEBUG: Token expiry:", new Date(decodedToken.exp * 1000)); // Convert from seconds to milliseconds
+
+      setLoading(false);
+
+      // Redirect to the dashboard
+      window.location.href = '/dashboard';
+
     } catch (error) {
-        setLoading(false);
-        setErrorMessage(error.response ? error.response.data.error : 'Error during login');
+      setLoading(false);
+      setErrorMessage(error.response?.data?.error || 'Error during login');
     }
   };
 

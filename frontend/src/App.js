@@ -5,7 +5,6 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import SignUpPage from "./components/pages/SignUpPage";
 import SignInPage from "./components/pages/SignInPage";
 import UserListPage from "./components/pages/UserListPage";
-import DashboardPage from "./components/pages/DashboardPage";
 import SignOutPage from "./components/pages/SignOutPage";
 import MainDashboard from "./components/pages/MainDashboard";
 
@@ -17,7 +16,6 @@ const App = () => {
         <Route path="/signup" element={<SignUpPage />} /> 
         <Route path="/signin" element={<SignInPage />} />
         <Route path="/userlists" element={<UserListPage />} />
-        <Route path="/dashboards" element={<DashboardPage />} />
         <Route path="/dashboard" element={<MainDashboard />} />
         <Route path="/signout" element={<SignOutPage />} />
       </Routes>

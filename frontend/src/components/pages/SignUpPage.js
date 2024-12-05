@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import axios from "axios";
 import { Link } from 'react-router-dom';
 
+const API_URL = process.env.REACT_APP_SB__API_URL + ":" + process.env.REACT_APP_SB__API_PORT;
+
 const GuestSignupForm = () => {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -35,15 +37,15 @@ const GuestSignupForm = () => {
     };
   
     try {
-      const response = await axios.post("http://127.0.0.1:8000/api/register_guest/", data, {
+      const response = await axios.post(`${API_URL}}/api/register_guest/`, data, {
         headers: {
           "Content-Type": "application/json",
         },
       });
       if (response.status === 201) {
         // Store both tokens after registration
-        localStorage.setItem('auth_token', response.data.access_token);
-        localStorage.setItem('refresh_token', response.data.refresh_token);
+        // localStorage.setItem('sb_access_token', response.data.access_token);
+        // localStorage.setItem('sb_refresh_token', response.data.refresh_token);
 
         setLoading(false);
 
