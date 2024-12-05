@@ -1,8 +1,0 @@
-Performing system checks...
-
-System check identified no issues (0 silenced).
-December 05, 2024 - 12:40:32
-Django version 5.1.3, using settings 'smart_building.settings'
-Starting development server at http://127.0.0.1:8000/
-Quit the server with CTRL-BREAK.
-
