@@ -18,9 +18,17 @@ from django.contrib import admin
 from django.urls import path
 from backend import views
 
+# #favicon
+# from django.views.static import serve
+# from django.conf import settings
+# from django.urls import re_path
+
 #from rest_framework_simplejwt.views import TokenRefreshView
 
 urlpatterns = [
+
+    #re_path(r'^favicon\.ico$', serve, {'path': 'favicon.ico', 'document_root': settings}),
+
     path("admin/", admin.site.urls),
 
     path("api/register_guest/", views.register_guest),

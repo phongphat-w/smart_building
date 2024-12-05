@@ -25,20 +25,20 @@ const LoginPage = () => {
             },
         });
         // Response contains a token
-        localStorage.setItem('access_token', response.data.access_token);
-        localStorage.setItem('refresh_token', response.data.refresh_token); 
+        localStorage.setItem('sb_access_token', response.data.sb_access_token);
+        localStorage.setItem('sb_refresh_token', response.data.sb_refresh_token); 
         
-        console.log('DEBUG: Access Token:', localStorage.getItem('access_token'));
-        console.log('DEBUG: Refresh Token:', localStorage.getItem('refresh_token'));
+        console.log('DEBUG: Access Token:', localStorage.getItem('sb_access_token'));
+        console.log('DEBUG: Refresh Token:', localStorage.getItem('sb_refresh_token'));
 
-        const token = localStorage.getItem('access_token')
+        const token = localStorage.getItem('sb_access_token')
         const decodedToken = jwtDecode(token); // jwtDecode is a function you can use from the 'jwt-decode' library
         console.log("DEBUG: SignIn - Token expiry: ", new Date(decodedToken.exp * 1000)); // Convert from seconds to milliseconds
 
         setLoading(false);
 
         // Redirect landing page
-        window.location.href = '/dashboards';
+        window.location.href = '/dashboard';
     } catch (error) {
         setLoading(false);
         setErrorMessage(error.response ? error.response.data.error : 'Error during login');

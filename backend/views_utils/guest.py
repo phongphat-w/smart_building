@@ -79,8 +79,8 @@ def register_guest(request):
             # Return the guest data along with tokens
             return Response({
                 "message": "Registration successful",
-                "access_token": access_token,  # Access token
-                "refresh_token": refresh_token,  # Refresh token
+                "sb_access_token": access_token,  # Access token
+                "sb_refresh_token": refresh_token,  # Refresh token
                 "guest": serializer.data  # Return guest data
             }, status=status.HTTP_201_CREATED)
         else:
@@ -123,8 +123,8 @@ def login_guest(request):
         # Return the tokens along with the user data
         return Response({
             "message": "Login successful",
-            "access_token": access_token,  # Return access token, short-lived token
-            "refresh_token": refresh_token,  # Return refresh token, long-lived token
+            "sb_access_token": access_token,  # Return access token, short-lived token
+            "sb_refresh_token": refresh_token,  # Return refresh token, long-lived token
         }, status=status.HTTP_200_OK)
 
     except Exception as e:

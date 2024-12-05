@@ -12,8 +12,8 @@ const DeviceDashboard = () => {
   const navigate = useNavigate();
 
   // Function to get the token from localStorage
-  const getAuthToken = () => localStorage.getItem('access_token');
-  const getRefreshToken = () => localStorage.getItem('refresh_token');
+  const getAuthToken = () => localStorage.getItem('sb_access_token');
+  const getRefreshToken = () => localStorage.getItem('sb_refresh_token');
 
   console.log('DEBUG: Onload() getAuthToken = ' + getAuthToken());
   console.log('DEBUG: Onload() getRefreshToken = ' + getRefreshToken());
@@ -25,8 +25,8 @@ const DeviceDashboard = () => {
   // SignOut function - used to remove tokens from localStorage
   const signOut = useCallback(() => {
     console.log("DEBUG: signOut() - is working")
-    // localStorage.removeItem('access_token');  // Remove access token
-    // localStorage.removeItem('refresh_token');  // Remove refresh token
+    localStorage.removeItem('sb_access_token');  // Remove access token
+    localStorage.removeItem('sb_refresh_token');  // Remove refresh token
     // console.log("DEBUG: 2 tokens are removed")
     navigate('/signin');  // Redirect to Sign In page
   }, [navigate]);
@@ -66,7 +66,7 @@ const DeviceDashboard = () => {
 
       if (response.data && response.data.access) {
         const { access } = response.data; // Extract the access token directly
-        localStorage.setItem('access_token', access); // Store the new access token
+        localStorage.setItem('sb_access_token', access); // Store the new access token
         return access;
       } else {
         console.error('Invalid response from refresh token endpoint');

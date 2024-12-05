@@ -31,45 +31,24 @@ SB__DJANGO_DB_PASSWORD = "password"
 
 ## Local DB
 #SQLite
-SB__GEN_DATA_FREQUENCY = "5" #Second
-os.environ["SB__GEN_DATA_FREQUENCY"] = SB__GEN_DATA_FREQUENCY
+os.environ["SB__GEN_DATA_FREQUENCY"] = "5" #Second, must be string not integer
 
 #IOT Json configuration file
-SB__GEN_DATA_MODE = "1" #Auto generate
-os.environ["SB__GEN_DATA_MODE"] = SB__GEN_DATA_MODE
+os.environ["SB__GEN_DATA_MODE"] = "1" #Auto generate, must be string not integer
 
 #TimeScaleDB
-SB__TIMESCALEDB_DB_HOST = "localhost"
-SB__TIMESCALEDB_DB_PORT = "5432"
-SB__TIMESCALEDB_DB_NAME = "smart_building"
-SB__TIMESCALEDB_DB_USER = "postgres"
-SB__TIMESCALEDB_DB_PASSWORD = "password"
-os.environ["SB__TIMESCALEDB_DB_HOST"] = SB__TIMESCALEDB_DB_HOST
-os.environ["SB__TIMESCALEDB_DB_PORT"] = SB__TIMESCALEDB_DB_PORT
-os.environ["SB__TIMESCALEDB_DB_NAME"] = SB__TIMESCALEDB_DB_NAME
-os.environ["SB__TIMESCALEDB_DB_USER"] = SB__TIMESCALEDB_DB_USER
-os.environ["SB__TIMESCALEDB_DB_PASSWORD"] = SB__TIMESCALEDB_DB_PASSWORD
+os.environ["SB__TIMESCALEDB_DB_HOST"] = "localhost"
+os.environ["SB__TIMESCALEDB_DB_PORT"] = "5432"
+os.environ["SB__TIMESCALEDB_DB_NAME"] = "smart_building"
+os.environ["SB__TIMESCALEDB_DB_USER"] = "postgres"
+os.environ["SB__TIMESCALEDB_DB_PASSWORD"] = "password"
 
-SB__USER_ADMIN_ID = "55a6d8ae-e242-45c1-8bd0-db4975cc366a"
-os.environ["SB__USER_ADMIN_ID"] = SB__DJANGO_DB_HOST
-
+os.environ["SB__USER_ADMIN_ID"] = "55a6d8ae-e242-45c1-8bd0-db4975cc366a"
 
 #Kafka server
-SB__KAFKA_HOST = "localhost"
-SB__KAFKA_PORT = "9092"
-SB__KAFKA_DATA_FREQUENCY = "5" #Second
-os.environ["SB__KAFKA_HOST"] = SB__KAFKA_HOST
-os.environ["SB__KAFKA_PORT"] = SB__KAFKA_PORT
-os.environ["SB__KAFKA_DATA_FREQUENCY"] = SB__KAFKA_DATA_FREQUENCY
-
-
-#======================================
-#Front-end (React.js)
-#======================================
-SB__API_HOST = "127.0.0.1"
-SB__API_PORT = "8080"
-os.environ["SB__API_HOST"] = SB__API_HOST
-os.environ["SB__API_PORT"] = SB__API_PORT
+os.environ["SB__KAFKA_HOST"] = "localhost"
+os.environ["SB__KAFKA_PORT"] = "9092"
+os.environ["SB__KAFKA_DATA_FREQUENCY"] = "5" #Second, must be string not integer
 
 
 #load_dotenv(dotenv_path = os.path.join(BASE_DIR, "configuration", ".env"))
@@ -258,49 +237,58 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 #============================
 # Logging system
 #============================
+"""
+import os
 
 # Ensure the logs directory exists
 log_dir = os.path.join(BASE_DIR, 'logs')
 if not os.path.exists(log_dir):
     os.makedirs(log_dir)
 
+# Set the logging level. Use 'DEBUG' for development and 'INFO' for production.
+log_level = 'DEBUG'  # Captures all log levels (DEBUG, INFO, WARNING, ERROR, CRITICAL)
+
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
     'handlers': {
+        # Timed Rotating File Handler for daily log rotation
         'timed_rotating_file': {
-            'level': 'DEBUG',  # Captures all log levels (DEBUG, INFO, WARNING, ERROR, CRITICAL)
+            'level': log_level,
             'class': 'logging.handlers.TimedRotatingFileHandler',
             'filename': os.path.join(log_dir, 'django.log'),
-            'when': 'midnight',  # Rotate at midnight
+            'when': 'midnight',  # Rotate logs at midnight
             'interval': 1,  # Rotate every day
-            'backupCount': 366,  # Keep last 366 days of logs
+            'backupCount': 366,  # Retain logs for the last 366 days
             'formatter': 'verbose',
         },
-        # Log to console 
+        # Console Handler for real-time log output
         'console': {
-            'level': 'DEBUG',  # DEBUG, INFO, WARNING, ERROR
+            'level': log_level,
             'class': 'logging.StreamHandler',
             'formatter': 'verbose',
         },
     },
     'formatters': {
+        # Verbose formatter for detailed logging output
         'verbose': {
             'format': '{asctime} - {levelname} - {module}: {message}',
-            'style': '{',
+            'style': '{',  # Use modern string formatting
         },
     },
     'loggers': {
+        # Main Django logger
         'django': {
-            'handlers': ['timed_rotating_file'],
-            'level': 'DEBUG',  # This captures all log levels (DEBUG, INFO, WARNING, ERROR, CRITICAL)
-            'propagate': True,
+            'handlers': ['timed_rotating_file', 'console'],  # Log to file and console
+            'level': log_level,  # Use the defined logging level
+            'propagate': True,  # Allow propagation to parent loggers
         },
+        # Database logger for SQL queries (if needed)
         'django.db.backends': {
-            'handlers': ['timed_rotating_file'],
-            'level': 'DEBUG',  # This captures all log levels (DEBUG, INFO, WARNING, ERROR, CRITICAL)
-            'propagate': False,
+            'handlers': ['timed_rotating_file'],  # Log SQL queries to file only
+            'level': log_level,  # Use the defined logging level
+            'propagate': False,  # Prevent logs from propagating to parent loggers
         },
-    },
-}
-
+    }
+} # End Logging
+"""

@@ -3,40 +3,63 @@ import axios from 'axios';
 import { Modal, Button, Card, Row, Col } from 'react-bootstrap';
 import { FaThermometerHalf, FaLightbulb, FaCloudSun, FaFan, FaCamera, FaSearch, FaMapMarkerAlt, 
   FaUsers, FaWater, FaRecycle, FaBatteryHalf, FaWindows, FaChild  } from 'react-icons/fa'; // Importing icons
-// import ReactMapGL, { Marker, NavigationControl } from 'react-map-gl';
+
+  // import ReactMapGL, { Marker, NavigationControl } from 'react-map-gl';
 import mapboxgl from 'mapbox-gl';
-import { Line } from 'react-chartjs-2';  // Import the Line chart
+
+//Chart
+import { Line, Pie, Bar } from 'react-chartjs-2';  // Import the Line chart
+import { Chart as ChartJS, CategoryScale, LinearScale, ArcElement, PointElement, LineElement, Title, 
+  Tooltip, Legend } from "chart.js";
+
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'font-awesome/css/font-awesome.min.css';
 import 'mapbox-gl/dist/mapbox-gl.css';  // CSS file for Mapbox GL JS
 // import 'mapbox-gl/dist/mapbox-gl.js';   // JS file for Mapbox GL JS
+
 import '../../App.css'; // Custom CSS for styling
 
-// Define the default map view center and zoom level
-const MAPBOX_API_KEY = 'pk.eyJ1IjoicGhvbmdwaGF0dyIsImEiOiJjbTQ5cXZiNmowZjJuMnFvaDFkc2N0ZjI5In0.oJiVG2scVaRn7R3STL_1LA';
-// const MAPBOX_API_KEY = 'pk.eyJ1IjoicGhvbmdwaGF0dyIsImEiOiJjbTQ5c2R2cTUwMDU2Mm1zZzB0MjltaW9tIn0.V80f6FPJi4fya6uJo0dw-A';
+ChartJS.register(CategoryScale, LinearScale, ArcElement, PointElement, LineElement, Title, Tooltip, Legend);
+
+// Access your environment variables
+// const API_URL = process.env.SB__API_URL + ":" + process.env.SB__API_PORT;
+// const MAPBOX_API_KEY = process.env.SB__MAP_TOKEN;
+
+const API_URL = 'http://127.0.0.1:8000'; // Update to match your Django server's address
+const MAPBOX_API_KEY = "pk.eyJ1IjoicGhvbmdwaGF0dyIsImEiOiJjbTQ5cXZiNmowZjJuMnFvaDFkc2N0ZjI5In0.oJiVG2scVaRn7R3STL_1LA";
+
+console.log('DEBUG: API_URL = ' + API_URL);
+console.log('DEBUG: MAPBOX_API_KEY = ' + MAPBOX_API_KEY);
+
 
 const MainDashboard = () => {
   const [deviceData, setDeviceData] = useState([]);
   const [modalShow, setModalShow] = useState(false);
   const [selectedDevice, setSelectedDevice] = useState(null);  
-  const [chartData, setChartData] = useState({});
+  const [chartDataElecFloor, setChartDataElecFloor] = useState(null);
+  const [chartDataElec, setChartDataElec] = useState(null);
+  const [chartDataWater, setChartDataWater] = useState(null);
 
   const mapContainerRef = useRef(null);
   const mapRef = useRef(null);
 
-  const url_acccout = 'http://127.0.0.1:8000/api/adevices/defb76a0-7ff4-4bdf-8100-a2edd5183ef6/';
-  const url_building = 'http://127.0.0.1:8000/api/bdevices/defb76a0-7ff4-4bdf-8100-a2edd5183ef6/001/';
-  const url_floor = 'http://127.0.0.1:8000/api/fdevices/defb76a0-7ff4-4bdf-8100-a2edd5183ef6/001/0001/';
-  const url_room = 'http://127.0.0.1:8000/api/rdevices/defb76a0-7ff4-4bdf-8100-a2edd5183ef6/001/0001/00001';
+  const url_acccout = '/api/adevices/defb76a0-7ff4-4bdf-8100-a2edd5183ef6/';
+  const url_building = '/api/bdevices/defb76a0-7ff4-4bdf-8100-a2edd5183ef6/001/';
+  const url_floor = '/api/fdevices/defb76a0-7ff4-4bdf-8100-a2edd5183ef6/001/0001/';
+  const url_room = '/api/rdevices/defb76a0-7ff4-4bdf-8100-a2edd5183ef6/001/0001/00001';
     
   // Fetch device data from API
   useEffect(() => {    
-    axios.get(url_room) // Account 1
+    axios.get(`${API_URL}${url_acccout}`) // Account 1
       .then((response) => {
         const data = response.data; // Access the data
         if (data && Array.isArray(data.data)) {
           setDeviceData(data.data); // Set the device data
+          
+          // Generate chart data after fetching device data
+          genDataElecFloor();
+          genDataElec();
+          genDataWater();
 
           // Set the map center based on the country name from the first device's country_name
           // const country = data.data[0]?.country_name;
@@ -85,29 +108,108 @@ const MainDashboard = () => {
     };
   }, []); // Run only once on mount
 
-  // Generate chart data (Example: temperature vs time)
-  const generateChartData = (deviceId) => {
-    // Dummy data generation for chart, replace this with actual data if needed
+  // Generate chart data
+  const genDataElecFloor = (deviceId) => {
     const data = {
-      labels: ['12:00', '14:00', '16:00', '18:00', '20:00'],
+      labels: ["Building 1", "Building 2", "Building 3"], // Labels for the chart
       datasets: [
         {
-          label: 'Temperature',
-          data: [22, 24, 23, 26, 28], // Replace this with actual data
-          fill: false,
-          borderColor: 'rgba(75,192,192,1)',
-          tension: 0.1,
+          label: "Energy Usage (2023)",
+          data: [80, 53, 90], // Data for each slice
+          backgroundColor: [
+            "rgba(255, 159, 64, 0.7)", // Pastel orange
+            "rgba(144, 238, 144, 0.7)", // Pastel green
+            "rgba(135, 206, 235, 0.7)", // Pastel sky
+          ],
+          borderColor: [
+            "rgba(255, 159, 64, 1)", // Solid pastel orange
+            "rgba(144, 238, 144, 1)", // Solid pastel green
+            "rgba(135, 206, 235, 1)", // Solid pastel sky
+          ],
+          borderWidth: 1, // Border width for chart slices
         },
       ],
     };
-    setChartData(data);
+
+    const options = {
+      plugins: {
+        legend: {
+          position: "right", // Move legend to the right-hand side
+          labels: {
+            usePointStyle: true, // Optional: Use circle markers in legend
+            padding: 20, // Add space between labels
+          },
+        },
+      },
+    };
+
+    setChartDataElecFloor(data, options); // Ensure options are applied
   };
+ 
+
+  const genDataElec = (deviceId) => {    
+    const data = {
+      labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
+      datasets: [
+        {
+          label: "2023",
+          data: [4.00, 4.50, 5.00, 5.50, 6.00, 6.50, 7.00, 7.50, 8.50, 8.00, 9.00, 12.00],
+          fill: true,
+          backgroundColor: "rgba(255, 182, 193, 0.5)", // Pastel pink
+          borderColor: "rgba(255, 182, 193, 1)", // Border pastel pink
+          borderWidth: 1.5, // Slightly thicker border for better visibility
+        },
+        {
+          label: "2024",
+          data: [7, 8.80, 9.00, 9.50, 10.00, 10.50, 11.00, 11.50, 12.00, 12.50, 13.50],
+          fill: true,
+          backgroundColor: "rgba(173, 216, 230, 0.5)", // Pastel blue
+          borderColor: "rgba(173, 216, 230, 1)", // Border pastel blue
+          borderWidth: 1.5,
+        }
+      ]
+    };
+    setChartDataElec(data);
+  };
+  
+  const genDataWater = (deviceId) => {    
+    const data = {
+      labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
+      datasets: [
+        {
+          label: "2022",
+          data: [100.00, 150.00, 200.00, 250.50, 300.50, 350.00, 360.00, 380.00, 400.35, 450.00, 460.50, 470.00],
+          fill: true,
+          backgroundColor: "rgba(255, 223, 186, 0.5)", // Pastel orange
+          borderColor: "rgba(255, 223, 186, 1)", // Solid pastel orange
+          borderWidth: 1.5,
+        },
+        {
+          label: "2023",
+          data: [90.00, 140.00, 160.00, 180.00, 200.50, 250.00, 270.00, 280.00, 300.00, 290.00, 295.50, 320.00],
+          fill: true,
+          backgroundColor: "rgba(173, 216, 230, 0.5)", // Pastel blue
+          borderColor: "rgba(173, 216, 230, 1)", // Solid pastel blue
+          borderWidth: 1.5,
+        },
+        {
+          label: "2024",
+          data: [110.00, 160.00, 220.00, 260.50, 320.50, 360.00, 370.00, 400.00, 430.35, 450.00, 500.00],
+          fill: false, // Transparent background
+          borderColor: "rgba(144, 238, 144, 1)", // Pastel green
+          borderWidth: 2, // Slightly thicker border for distinction
+        }
+      ]
+    };
+    setChartDataWater(data);
+  };
+  
 
   // Handle Modal Open
   const handleModalShow = (device) => {
     setSelectedDevice(device);
     setModalShow(true);
-    generateChartData(device.iot_device_id);
+    // genDataElecity(device.iot_device_id);
   };
 
   // Handle Modal Close
@@ -168,7 +270,7 @@ const MainDashboard = () => {
   };
 
   return (
-    <div className="MainDashboard">
+    <div className="MainDashboard" style={{ padding: '20px' }}>
       <header>
         <br />
         <center><h1>Smart Building Dashboard</h1></center>
@@ -205,8 +307,62 @@ const MainDashboard = () => {
         </Col>
       </Row>
 
-      <br />
+      <br/>
+      <Row className="justify-content-center">
+        <Col md={4} sm={6} xs={8}>
+          <Card>
+            <Card.Body>
+              <Card.Title>Electricity Usage (kWh/m<sup>2</sup>)</Card.Title>
+              <Card.Text>
+                <div id='chartDataElecFloor' style={{ height: '200px', width: '100%' }}>
+                    {chartDataElecFloor ? (
+                      <Pie data={chartDataElecFloor} />
+                    ) : (
+                      <p>Loading chart data...</p>
+                    )}
+                </div>
+              </Card.Text>
+            </Card.Body>
+          </Card>
+        </Col> 
+
+        <Col md={4} sm={6} xs={8}>
+          <Card>
+            <Card.Body>
+              <Card.Title>Electricity Bill (Million THB)</Card.Title>
+              <Card.Text>
+                <div id='chartDataElec' style={{ height: '200px', width: '100%' }}>
+                    {chartDataElec ? (
+                      <Line data={chartDataElec} />
+                    ) : (
+                      <p>Loading chart data...</p>
+                    )}
+                </div>
+              </Card.Text>
+            </Card.Body>
+          </Card>
+        </Col> 
+
+        <Col md={4} sm={6} xs={8}>
+          <Card>
+            <Card.Body>
+              <Card.Title>Water Consumption (m<sup>3</sup>)</Card.Title>
+              <Card.Text>
+                <div id='chartDataWater' style={{ height: '200px', width: '100%' }}>
+                    {chartDataWater ? (
+                      <Line data={chartDataWater} />
+                    ) : (
+                      <p>Loading chart data...</p>
+                    )}
+                </div>
+              </Card.Text>
+            </Card.Body>
+          </Card>
+        </Col> 
+
+      </Row>
       
+      <br />      
       {/* Devices Display */}
       <div className="devices-grid">
         <Row>

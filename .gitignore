@@ -1,7 +1,7 @@
 # Ignore environment files
-#configuration/.env
-#.env
-#.env.enc
+configuration/
+.env
+.env.enc
 
 # Ignore SQLite database files
 #db.sqlite3
@@ -36,3 +36,29 @@ backend/.docker/
 *.swp
 *.bak
 *~
+
+#==================================================================
+
+# dependencies
+frontend/node_modules
+frontend/.pnp
+.pnp.js
+
+# testing
+frontend/coverage
+frontend/src/components/pages/test
+
+# production
+frontend/build
+
+# misc
+.DS_Store
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
