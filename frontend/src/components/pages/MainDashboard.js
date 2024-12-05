@@ -22,11 +22,8 @@ import '../../App.css'; // Custom CSS for styling
 ChartJS.register(CategoryScale, LinearScale, ArcElement, PointElement, LineElement, Title, Tooltip, Legend);
 
 // Access your environment variables
-// const API_URL = process.env.SB__API_URL + ":" + process.env.SB__API_PORT;
-// const MAPBOX_API_KEY = process.env.SB__MAP_TOKEN;
-
-const API_URL = 'http://127.0.0.1:8000'; // Update to match your Django server's address
-const MAPBOX_API_KEY = "__pk.eyJ1IjoicGhvbmdwaGF0dyIsImEiOiJjbTQ5cXZiNmowZjJuMnFvaDFkc2N0ZjI5In0.oJiVG2scVaRn7R3STL_1LA";
+const API_URL = process.env.SB__API_URL + ":" + process.env.SB__API_PORT;
+const MAPBOX_API_KEY = process.env.SB__MAP_TOKEN;
 
 console.log('DEBUG: API_URL = ' + API_URL);
 console.log('DEBUG: MAPBOX_API_KEY = ' + MAPBOX_API_KEY);
