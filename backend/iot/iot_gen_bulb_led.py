@@ -13,7 +13,7 @@ con_iot_device_id = "c0ec3c70-b76f-45e0-9297-8b5a4a462a47" #Smart bulbs and LED 
 root_path = os.path.abspath(os.path.join(os.getcwd(), "..", ".."))
 
 # Load environment variables from .env file
-load_dotenv(dotenv_path = os.path.join(root_path, "configuration", ".env"))
+load_dotenv(dotenv_path = os.path.join(root_path, "", ".env"))
             
 def gen_data(iot_device_id, auto_mode = 1, file_name=""):
     lis_data = []

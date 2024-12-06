@@ -13,7 +13,7 @@ con_iot_device_id = "080d460f-e54c-4262-a4ac-a3d42c40cbd5" #Demand-Controlled Ve
 root_path = os.path.abspath(os.path.join(os.getcwd(), "..", ".."))
 
 # Load environment variables from .env file
-load_dotenv(dotenv_path = os.path.join(root_path, "configuration", ".env"))
+load_dotenv(dotenv_path = os.path.join(root_path, "", ".env"))
             
 def gen_data(iot_device_id, auto_mode = 1, file_name=""):
     lis_data = []

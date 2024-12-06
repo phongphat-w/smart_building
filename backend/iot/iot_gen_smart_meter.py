@@ -13,7 +13,7 @@ con_iot_device_id = "f531b9c1-c46a-42c4-989d-1d5be315f6a6" #Smart meters
 root_path = os.path.abspath(os.path.join(os.getcwd(), "..", ".."))
 
 # Load environment variables from .env file
-load_dotenv(dotenv_path = os.path.join(root_path, "configuration", ".env"))
+load_dotenv(dotenv_path = os.path.join(root_path, "", ".env"))
             
 def gen_data(iot_device_id, auto_mode = 1, file_name=""):
     lis_data = []

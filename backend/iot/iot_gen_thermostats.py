@@ -13,7 +13,7 @@ con_iot_device_id = "7c84b98d-8f69-4959-ac5b-1b2743077151" #Smart thermostats
 root_path = os.path.abspath(os.path.join(os.getcwd(), "..", ".."))
 
 # Load environment variables from .env file
-load_dotenv(dotenv_path = os.path.join(root_path, "configuration", ".env"))
+load_dotenv(dotenv_path = os.path.join(root_path, "", ".env"))
             
 def gen_data(iot_device_id, auto_mode = 1, file_name=""):
     lis_data = []

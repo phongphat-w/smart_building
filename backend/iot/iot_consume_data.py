@@ -12,7 +12,7 @@ import multiprocessing
 root_path = os.path.abspath(os.path.join(os.getcwd(), "..", ".."))
 
 # Load environment variables from .env file
-load_dotenv(dotenv_path = os.path.join(root_path, "configuration", ".env"))
+load_dotenv(dotenv_path = os.path.join(root_path, "", ".env"))
 
 # Define Kafka Consumer configuration
 consumer_config = {

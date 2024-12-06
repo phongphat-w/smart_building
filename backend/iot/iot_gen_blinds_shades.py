@@ -13,7 +13,7 @@ con_iot_device_id = "69b29098-c768-423e-ac2e-cc443e18f8a9" #Automated blinds or 
 root_path = os.path.abspath(os.path.join(os.getcwd(), "..", ".."))
 
 # Load environment variables from .env file
-load_dotenv(dotenv_path = os.path.join(root_path, "configuration", ".env"))
+load_dotenv(dotenv_path = os.path.join(root_path, "", ".env"))
             
 def gen_data(iot_device_id, auto_mode = 1, file_name=""):
     lis_data = []
