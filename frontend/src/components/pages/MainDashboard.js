@@ -172,7 +172,6 @@ const MainDashboard = () => {
   }, [selectedDevice, navigate]); // Add selectedDevice and navigate as dependencies
   
 
-
   //========================================
   //Fetch data for overview - map
   //========================================
@@ -213,7 +212,6 @@ const MainDashboard = () => {
       };
     } //End of 'else'
   }, []); // Run only once on mount
-
 
   // Generate chart data
   const genDataElecFloor = (deviceId) => {

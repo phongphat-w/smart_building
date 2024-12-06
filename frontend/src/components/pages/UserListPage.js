@@ -79,7 +79,8 @@ const UserListPage = () => {
               <td>{user.email}</td>
               <td>{user.checkin_date}</td>
               <td>{user.checkout_date}</td>
-              <td>{user.is_active ? 'Active' : 'Inactive'}</td>
+              {/* <td>{user.is_active ? 'Active' : 'Inactive'}</td> */}
+              <td>Active</td>
               <td>
                 <button className="btn btn-info" onClick={() => toggleExpand(user.email)}>
                   {expanded[user.email] ? 'Hide Details' : 'Show Details'}
