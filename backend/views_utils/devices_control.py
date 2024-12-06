@@ -5,7 +5,7 @@ from ..models import IoTDevice
 from ..serializers import IoTDeviceSerializer
 
 @api_view(["POST"])
-def control_device(request, device_id):
+def control_device(request, ):
     try:
         device = IoTDevice.objects.get(id=device_id)
         temperature = request.data.get("temperature")

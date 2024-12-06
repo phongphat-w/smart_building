@@ -3,9 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { jwtDecode } from "jwt-decode";
 import axios from 'axios';
 import { Modal, Button, Card, Row, Col } from 'react-bootstrap';
-import { FaThermometerHalf, FaLightbulb, FaCloudSun, FaFan, FaCamera, FaSearch, FaMapMarkerAlt, 
-  FaUsers, FaWater, FaRecycle, FaBatteryHalf, FaWindows, FaChild, 
-  FaLock} from 'react-icons/fa'; // Importing icons
+import { FaThermometerHalf, FaLightbulb, FaCloudSun, FaFan, FaCamera, FaSearch, 
+  FaUsers, FaWater, FaRecycle, FaBatteryHalf, FaWindows, FaChild } from 'react-icons/fa'; // Importing icons
 
   // import ReactMapGL, { Marker, NavigationControl } from 'react-map-gl';
 import mapboxgl from 'mapbox-gl';
@@ -26,8 +25,8 @@ ChartJS.register(CategoryScale, LinearScale, ArcElement, PointElement, LineEleme
 
 // Access your environment variables
 const API_URL = process.env.REACT_APP_SB__API_URL + ":" + process.env.REACT_APP_SB__API_PORT;
-// const MAPBOX_API_KEY = process.env.REACT_APP_SB__MAP_TOKEN;
-const MAPBOX_API_KEY = "--";
+const MAPBOX_API_KEY = process.env.REACT_APP_SB__MAP_TOKEN;
+//const MAPBOX_API_KEY = "--";
 
 console.log('DEBUG: API_URL = ' + API_URL);
 console.log('DEBUG: MAPBOX_API_KEY = ' + MAPBOX_API_KEY);
@@ -46,6 +45,12 @@ const MainDashboard = () => {
   const [chartDataWater, setChartDataWater] = useState(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [loginDisplay, setLoginDisplay] = useState(false);
+  
+  const [message, setMessage] = useState("");
+  const [errorMessage, setErrorMessage] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const [temperature, setTemperature] = useState("");
   const navigate = useNavigate();
 
   const mapContainerRef = useRef(null);
@@ -115,52 +120,57 @@ const MainDashboard = () => {
   // Fetch data for overview
   //========================================
   useEffect(() => {
-    let roleName = ""
-    let urlDevices = ''
+    const userInfo = JSON.parse(getUserInfo());
   
-    console.log("DEBUG: useEffect1() - is working")
+    if (!userInfo || !userInfo[0]?.account_id) {
+      console.error("Invalid or missing user info:", userInfo);
+      return;
+    }
+  
+    let urlDevices = '';
+  
+    console.log("DEBUG: useEffect1() - is working");
     const token = getAuthToken();
-
-    console.log("DEBUG: useEffect() -  token = " + token)
-
+  
+    console.log("DEBUG: useEffect() - token =", token);
+  
     if (!token) {
       navigate('/signin'); // Redirect if no token
-      console.log("DEBUG: useEffect1() -  check token = " + token)
+      console.log("DEBUG: useEffect1() - check token =", token);
+      return; // Prevent further execution
     }
-
-    const userInfo = JSON.parse(getUserInfo());
-    console.log("DEBUG: userInfo = " + userInfo)
-
+  
     // API URL
     const url_account = `/api/adevices/${userInfo[0].account_id}/`;
-   
-    if (String(userInfo[0].is_admin) === 'true'){ //Admin
-        urlDevices = `${API_URL}${url_account}`;
-        console.log("DEBUG: Admin login")
-        //
-        axios.get(urlDevices).then((response) => {
+  
+    if (String(userInfo[0].is_admin) === 'true') {
+      // Admin logic
+      urlDevices = `${API_URL}${url_account}`;
+      console.log("DEBUG: Admin login");
+  
+      axios
+        .get(urlDevices)
+        .then((response) => {
           const data = response.data; // Access the data
           if (data && Array.isArray(data.data)) {
             setDeviceData(data.data); // Set the device data
-            
+  
             // Generate chart data after fetching device data
             genDataElecFloor();
             genDataElec();
             genDataWater();
-
           } else {
-            console.error('Expected data to be an array but got:', data);
+            console.error("Expected data to be an array but got:", data);
           }
         })
         .catch((error) => {
-          console.error('Error fetching data:', error);
+          console.error("Error fetching data:", error);
         });
-        //
-    }else{
-        console.log('DEBUG: User or staff login');
+    } else {
+      console.log("DEBUG: User or staff login");
     }
-    
-  }, [navigate]); // Empty dependency array for fetching data once on mount
+  }, [selectedDevice, navigate]); // Add selectedDevice and navigate as dependencies
+  
 
 
   //========================================
@@ -302,6 +312,14 @@ const MainDashboard = () => {
   };
   
 
+  //========================================
+  // Fetch device data
+  //========================================
+  
+
+
+
+
   // Handle Modal Open
   const handleModalShow = (device) => {
     setSelectedDevice(device);
@@ -366,7 +384,57 @@ const MainDashboard = () => {
     padding: '20px',
   };
 
-  // const userInfo = JSON.parse(getUserInfo());
+  //=============================================
+  //Submit form
+  //=============================================
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setErrorMessage('');
+  
+    const data = {
+        device_id: '7c84b98d-8f69-4959-ac5b-1b2743077151', //'Smart thermostats'
+        temperature: '25.00', //'Smart thermostats'
+        update_by: '32ab3f31-01bf-4ea3-b27e-135497b10a46'
+    };
+  
+    try {
+      const response = await axios.post(`${API_URL}}/api/device_control/`, data, {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+      if (response.status === 201) {
+
+        setLoading(false);
+
+        setMessage(
+          <>
+            <p>Save successfully</p>
+          </>
+        );
+      }
+      else {
+        setMessage(response.data.message);
+      }
+
+    } catch (error) {
+      setLoading(false); // Hide loading indicator
+      if (error.response) {
+        // Server responded with an error
+        console.error("Error response:", error.response);
+        setMessage("Error during save data: " + error.response.data.error);
+      } else if (error.request) {
+        // No response received from server
+        console.error("Error request:", error.request);
+        setMessage("No response from server");
+      } else {
+        // Something else went wrong
+        console.error("Error:", error.message);
+        setMessage("Error during save data: " + error.message);
+      }
+    }
+  };
 
   return (
     <div className="MainDashboard" style={{ padding: '20px' }}>
@@ -495,15 +563,140 @@ const MainDashboard = () => {
                     <div>Device ID: {device.iot_device_id}</div>
                     <br/>
                     <div className="device-status">
-                      {/* Example of dynamic status */}
-                      <p><FaThermometerHalf /> Temperature: 25°C</p>
-                      <p><FaLightbulb /> Light Level: 80%</p>
+                        {/* Dynamic status */}
+
+                        {/*Smart thermostats */}
+                        { device.iot_device_id === '7c84b98d-8f69-4959-ac5b-1b2743077151' ? (
+                            <>
+                              <p><FaThermometerHalf /> Temperature: 25°C</p>
+                              <p><FaLightbulb /> Light Level: 70%</p> 
+                              <p>. </p>
+                            </>
+                          ) : (
+                            <></>
+                        )}
+                        
+                        {/*Demand-Controlled Ventilation (DCV) */}
+                        { device.iot_device_id === '080d460f-e54c-4262-a4ac-a3d42c40cbd5' ? (
+                            <>
+                              <p><FaLightbulb /> CO<sub>2</sub>: 400.00 Lux</p>
+                              <p><FaThermometerHalf /> humidity: 50.00 g/m<sup>3</sup></p>
+                              <p><FaBatteryHalf /> Battery Level: 70%</p> 
+                            </>
+                          ) : (
+                            <></>
+                        )}
+
+                        {/*Smart bulbs and LED lights */}
+                        { device.iot_device_id === 'c0ec3c70-b76f-45e0-9297-8b5a4a462a47' ? (
+                            <>
+                              <p><FaLightbulb /> Light Level: 401.00 Lux</p>
+                              <p><FaThermometerHalf /> Temperature: 25°C</p>
+                              <p><FaBatteryHalf /> Battery Level: 70%</p> 
+                            </>
+                          ) : (
+                            <></>
+                        )}
+
+                        {/*Smart meters */}
+                        { device.iot_device_id === 'f531b9c1-c46a-42c4-989d-1d5be315f6a6' ? (
+                            <>
+                              <p>Voltage: 100.00 Volt</p>
+                              <p>current: 50.00 Ampere</p>
+                              <p><FaBatteryHalf /> Battery Level: 70%</p> 
+                            </>
+                          ) : (
+                            <></>
+                        )}
+
+                        {/* Presence sensors */}
+                        { device.iot_device_id === '96b38698-d9ad-4355-807f-5580397471a1' ? (
+                            <>
+                              <p><FaChild /> Human status: Yes</p>
+                              <p><FaBatteryHalf /> Battery Level: 70%</p> 
+                              <p>. </p>
+                            </>
+                          ) : (
+                            <></>
+                        )}
+
+                        {/* Automated blinds or shades */}
+                        { device.iot_device_id === '69b29098-c768-423e-ac2e-cc443e18f8a9' ? (
+                            <>
+                              <p><FaLightbulb /> Light Level: 401.00 Lux</p>
+                              <p><FaThermometerHalf /> Temperature: 25°C</p>
+                              <p><FaBatteryHalf /> Battery Level: 70%</p> 
+                            </>
+                          ) : (
+                            <></>
+                        )}
+
+                        {/* Air Conditioning */}
+                        { device.iot_device_id === '3382ead3-4c22-4fac-bc92-d2cc11e94564' ? (
+                            <>
+                              <p><FaThermometerHalf /> Temperature: 25°C</p>
+                              <p><FaBatteryHalf /> Battery Level: 70%</p> 
+                              <p>. </p>
+                            </>
+                          ) : (
+                            <></>
+                        )}
+
+                        {/* Smart cameras */}
+                        { device.iot_device_id === '2a66e85b-2e08-4a82-9617-f6ba6ab55cca' ? (
+                            <>
+                              <p>Human Status: Yes</p>
+                              <p><FaBatteryHalf /> Battery Level: 70%</p> 
+                              <p>. </p>
+                            </>
+                          ) : (
+                            <></>
+                        )}
+
+                        {/* Leak detection sensors */}
+                        { device.iot_device_id === '3e6448c0-eea1-4f8d-bfc1-366685232a83' ? (
+                            <>
+                              <p><FaWater />Water Leak Status: No</p>
+                              <p><FaBatteryHalf /> Battery Level: 70%</p> 
+                              <p>. </p>
+                            </>
+                          ) : (
+                            <></>
+                        )}
+
+                        {/* Smart bins */}
+                        { device.iot_device_id === '2dcc0b13-ff3a-445d-b6c8-a92b05bbba6c' ? (
+                            <>
+                              <p><FaThermometerHalf /> Bins Level: 30%</p>
+                              <p><FaBatteryHalf /> Battery Level: 70%</p> 
+                              <p>. </p>
+                            </>
+                          ) : (
+                            <></>
+                        )}
+
+
+                        {/* RFID tags and sensors */}
+                        { device.iot_device_id === '21a0a6de-88a5-4a42-8734-1fa27483e138' ? (
+                            <>
+                              <p>Object Position: Move</p>
+                              <p><FaBatteryHalf /> Battery Level: 70%</p> 
+                              <p>. </p>
+                            </>
+                          ) : (
+                            <></>
+                        )}
+
+                        
+
                     </div>
+
                     <div>
                       {/* Show Line Chart below each device */}
                       {/* <Line data={chartData} /> */}
                     </div>
-                    <div style={{ textAlign: 'right' }}><Button onClick={() => handleModalShow(device)} variant="primary">Control Device</Button></div>
+
+                    <div style={{ textAlign: 'right' }}><Button onClick={() => handleModalShow(device)} variant="primary">Control >></Button></div>
                   </div>
                 </Card.Body>
               </Card>
@@ -515,14 +708,27 @@ const MainDashboard = () => {
       {/* Modal to control device */}
       <Modal show={modalShow} onHide={handleModalClose}>
         <Modal.Header closeButton>
-          <Modal.Title>Device Control: {selectedDevice?.device_sub_type_name}</Modal.Title>
+          <Modal.Title>Device Configuration</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          xxxxxxxxx
+          <div className="container mt-5">
+            <h3>{selectedDevice?.device_sub_type_name}</h3>
+            <form onSubmit={handleSubmit}>        
+              <div className="form-group">
+                <label>Device ID: </label>
+                <input type='text' className="form-control" value={selectedDevice?.iot_device_id} required />
+
+                <label>Temperature:</label>
+                <input type="text" className="form-control" value="25" onChange={(e) => setTemperature(e.target.value)} required />
+              </div>              
+              <center><button type="submit" className="btn btn-primary mt-3">Save</button></center>
+            </form>
+            {message && <p>{message}</p>}
+          </div>
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="secondary" onClick={handleModalClose}>Cancel</Button>
-          <Button variant="primary" onClick={handleSave}>Save</Button>
+          {/* <Button variant="secondary" onClick={handleModalClose}>Cancel</Button> */}
+          {/* <Button variant="primary" onClick={handleSave}>Save</Button> */}
         </Modal.Footer>
       </Modal>
     </div>

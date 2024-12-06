@@ -46,5 +46,7 @@ urlpatterns = [
     path("api/fdevices/<str:account_id>/<str:building_id>/<str:floor_id>/",views.get_floor_devices),
     path("api/rdevices/<str:account_id>/<str:building_id>/<str:floor_id>/<str:room_id>/",views.get_room_devices),
     
+    #IOT Data
+    path("api/device_data/<str:device_id>/",views.get_device_data),
     
 ]

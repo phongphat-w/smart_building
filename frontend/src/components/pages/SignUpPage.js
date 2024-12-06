@@ -14,8 +14,8 @@ const GuestSignupForm = () => {
   const [buildingId, setBuildingId] = useState("");
   const [floorId, setFloorId] = useState("");
   const [roomId, setRoomId] = useState("");
+  
   const [message, setMessage] = useState("");
-
   const [errorMessage, setErrorMessage] = useState('');
   const [loading, setLoading] = useState(false);
 
