@@ -37,6 +37,8 @@ backend/.docker/
 *~
 
 #==================================================================
+# Configuration for DEV env
+frontend/eslint.config.mjs
 
 # dependencies
 frontend/node_modules/

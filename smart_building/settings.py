@@ -118,6 +118,13 @@ AUTHENTICATION_BACKENDS = (
 
 AUTH_USER_MODEL = 'backend.Guest' #app_label.ModelName
 
+PASSWORD_HASHERS = [
+    'django.contrib.auth.hashers.Argon2PasswordHasher',
+    'django.contrib.auth.hashers.PBKDF2PasswordHasher',
+    'django.contrib.auth.hashers.PBKDF2SHA1PasswordHasher',
+    'django.contrib.auth.hashers.BCryptSHA256PasswordHasher',
+]
+
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware', # This must be at the top
     'django.middleware.common.CommonMiddleware', # Ensure this is below the CorsMiddleware

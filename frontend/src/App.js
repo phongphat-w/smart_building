@@ -1,25 +1,25 @@
 import React from "react";
-import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import "bootstrap/dist/css/bootstrap.min.css";
 
-import SignUpPage from "./components/pages/SignUpPage";
-import SignInPage from "./components/pages/SignInPage";
-import UserListPage from "./components/pages/UserListPage";
-import SignOutPage from "./components/pages/SignOutPage";
-import MainDashboard from "./components/pages/MainDashboard";
+import SignUpPage from "./components/pages/SignUpPage.js";
+import SignInPage from "./components/pages/SignInPage.js";
+import UserListPage from "./components/pages/UserListPage.js";
+import SignOutPage from "./components/pages/SignOutPage.js";
+import DashboardPage from "./components/pages/DashboardPage.js";
 
 
 const App = () => {
   return (
-    <Router>
+    <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
       <Routes>        
         <Route path="/signup" element={<SignUpPage />} /> 
         <Route path="/signin" element={<SignInPage />} />
         <Route path="/userlists" element={<UserListPage />} />
-        <Route path="/dashboard" element={<MainDashboard />} />
+        <Route path="/dashboard" element={<DashboardPage />} />
         <Route path="/signout" element={<SignOutPage />} />
       </Routes>
-    </Router>
+    </BrowserRouter>
   );
 };
 
