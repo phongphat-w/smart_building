@@ -1,7 +1,7 @@
 import { Pie, Line } from 'react-chartjs-2';
-import { Col, Card } from 'react-bootstrap';
 
 import Logger from '../../com-utils/logger.js';
+import { MessageAlert } from '../page-utils/message-alert.js';
 
 function ElectricityUsageChart(chartDataElecFloor){
     try {
@@ -12,19 +12,7 @@ function ElectricityUsageChart(chartDataElecFloor){
         );
     } catch (error) {
         Logger.error(`${genElectricityUsageChart.name}(): ${error.message}`, error);
-
-        // render a fallback UI
-        return (
-            <Col md={4}>
-                <Card>
-                    <Card.Body>
-                        <div className="device-card-error">
-                            <h5 style={{ color: 'red' }}>Error rendering chart</h5>
-                        </div>
-                    </Card.Body>
-                </Card>
-            </Col>
-        );
+        MessageAlert('danger','Error rendering chart');
     }
 
 };
@@ -38,19 +26,7 @@ function ElectricityBillChart(chartDataElec){
         );
     } catch (error) {
         Logger.error(`${genElectricityBillChart.name}(): ${error.message}`, error);
-
-        // render a fallback UI
-        return (
-            <Col md={4}>
-                <Card>
-                    <Card.Body>
-                        <div className="device-card-error">
-                            <h5 style={{ color: 'red' }}>Error rendering chart</h5>
-                        </div>
-                    </Card.Body>
-                </Card>
-            </Col>
-        );
+        MessageAlert('danger','Error rendering chart');
     }
 };
 
@@ -63,18 +39,6 @@ function WaterConsumptionChart(chartDataWater){
         );
     } catch (error) {
         Logger.error(`${genWaterConsumptionChart.name}(): ${error.message}`, error);
-
-        // render a fallback UI
-        return (
-            <Col md={4}>
-                <Card>
-                    <Card.Body>
-                        <div className="device-card-error">
-                            <h5 style={{ color: 'red' }}>Error rendering chart</h5>
-                        </div>
-                    </Card.Body>
-                </Card>
-            </Col>
-        );
+        MessageAlert('danger','Cannot display chart');        
     }
 };

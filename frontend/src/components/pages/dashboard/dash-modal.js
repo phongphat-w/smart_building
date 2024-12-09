@@ -3,6 +3,7 @@ import { Modal, Button, Col, Card } from 'react-bootstrap';
 import { useHandleSubmit } from './dash-submit.js';
 
 import Logger from '../../com-utils/logger.js';
+import { MessageAlert } from '../page-utils/message-alert.js';
 import ConfDeviceInfo from '../../com-utils/conf-device-Info.js';
 
 export const ModalDevice = ({ modalShow, handleModalClose, selectedDevice, user_id }) => {
@@ -128,7 +129,7 @@ export const ModalDevice = ({ modalShow, handleModalClose, selectedDevice, user_
 
             // Call handleSubmit with the collected form data
             // import { handleSubmit } from './dash-submit.js';
-            handleSubmit(formData)
+            useHandleSubmit(formData)
                 .then(() => {
                     setMessage("Save successful!");
                     handleModalClose();
@@ -153,250 +154,90 @@ export const ModalDevice = ({ modalShow, handleModalClose, selectedDevice, user_
                             <br/><br/>
                             {selectedDevice?.iot_device_id === ConfDeviceInfo.devIdThermostats && (
                                 <>
-                                    <label>Temperature:</label>
-                                    <input
-                                        type="text"
-                                        className="form-control"
-                                        value={temperThemostats}
-                                        onChange={(e) => setTemperThemostats(e.target.value)}
-                                        required
-                                    />
-                                    <label>Battery Level:</label>
-                                    <input
-                                        type="text"
-                                        className="form-control"
-                                        value={batLevelThermostats}
-                                        onChange={(e) => setBatLevelThermostats(e.target.value)}
-                                        required
-                                        readOnly
-                                    />
+                                <label>Temperature:</label>
+                                <input type="text" className="form-control" value={temperThemostats} onChange={(e) => setTemperThemostats(e.target.value)} required />
+                                <label>Battery Level:</label>
+                                <input type="text" className="form-control" value={batLevelThermostats} onChange={(e) => setBatLevelThermostats(e.target.value)} required readOnly />
                                 </>
                             )}
                             {selectedDevice?.iot_device_id === ConfDeviceInfo.devIdDemConVen && (
                                 <>
-                                    <label>CO<sub>2</sub>:</label>
-                                    <input
-                                        type="text"
-                                        className="form-control"
-                                        value={co2DemConVen}
-                                        onChange={(e) => setCo2DemConVen(e.target.value)}
-                                        required
-                                        readOnly
-                                    />
-                                    <label>Humidity:</label>
-                                    <input
-                                        type="text"
-                                        className="form-control"
-                                        value={humidity}
-                                        onChange={(e) => setHumidity(e.target.value)}
-                                        required
-                                        readOnly
-                                    />
-                                    <label>Battery Level:</label>
-                                    <input
-                                        type="text"
-                                        className="form-control"
-                                        value={batLevelDemConVen}
-                                        onChange={(e) => setBatLevelDemConVen(e.target.value)}
-                                        required
-                                        readOnly
-                                    />                              
+                                <label>CO<sub>2</sub>:</label>
+                                <input type="text" className="form-control" value={co2DemConVen} onChange={(e) => setCo2DemConVen(e.target.value)} required readOnly />
+                                <label>Humidity:</label>
+                                <input type="text" className="form-control" value={humidity} onChange={(e) => setHumidity(e.target.value)} required readOnly />
+                                <label>Battery Level:</label>
+                                <input type="text" className="form-control" value={batLevelDemConVen} onChange={(e) => setBatLevelDemConVen(e.target.value)} required readOnly />                              
                                 </>
                             )}
                             {selectedDevice?.iot_device_id === ConfDeviceInfo.devIdBulbs && (
                                 <>
-                                    <label>Light Level:</label>
-                                    <input
-                                        type="text"
-                                        className="form-control"
-                                        value={lightLevelBulbs}
-                                        onChange={(e) => setLightLevelBulbs(e.target.value)}
-                                        required
-                                    />
-                                    <label>Temperature:</label>
-                                    <input
-                                        type="text"
-                                        className="form-control"
-                                        value={temperBulbs}
-                                        onChange={(e) => setTemperBulbs(e.target.value)}
-                                        required
-                                    />
-                                    <label>Battery Level:</label>
-                                    <input
-                                        type="text"
-                                        className="form-control"
-                                        value={batLevelBulbs}
-                                        onChange={(e) => setBatLevelBulbs(e.target.value)}
-                                        required
-                                        readOnly
-                                    /> 
+                                <label>Light Level:</label>
+                                <input type="text" className="form-control" value={lightLevelBulbs} onChange={(e) => setLightLevelBulbs(e.target.value)} required />
+                                <label>Temperature:</label>
+                                <input type="text" className="form-control" value={temperBulbs} onChange={(e) => setTemperBulbs(e.target.value)} required />
+                                <label>Battery Level:</label>
+                                <input type="text" className="form-control" value={batLevelBulbs} onChange={(e) => setBatLevelBulbs(e.target.value)} required readOnly /> 
                                 </>
                             )}
                             {selectedDevice?.iot_device_id === ConfDeviceInfo.devIdElecMeter && (
                                 <>
-                                    <label>Voltage:</label>
-                                    <input
-                                        type="text"
-                                        className="form-control"
-                                        value={voltageElecMeter}
-                                        onChange={(e) => setVoltageElecMeter(e.target.value)}
-                                        required
-                                    />
-                                    <label>Current:</label>
-                                    <input
-                                        type="text"
-                                        className="form-control"
-                                        value={currentElecMeter}
-                                        onChange={(e) => setCurrentElecMeter(e.target.value)}
-                                        required
-                                    />
-                                    <label>Battery Level:</label>
-                                    <input
-                                        type="text"
-                                        className="form-control"
-                                        value={batLevelElecMeter}
-                                        onChange={(e) => setBatLevelElecMeter(e.target.value)}
-                                        required
-                                        readOnly
-                                    /> 
+                                <label>Voltage:</label>
+                                <input type="text" className="form-control" value={voltageElecMeter} onChange={(e) => setVoltageElecMeter(e.target.value)} required />
+                                <label>Current:</label>
+                                <input type="text" className="form-control" value={currentElecMeter} onChange={(e) => setCurrentElecMeter(e.target.value)} required />
+                                <label>Battery Level:</label>
+                                <input type="text" className="form-control" value={batLevelElecMeter} onChange={(e) => setBatLevelElecMeter(e.target.value)} required readOnly /> 
                                 </>
                             )}
                             {selectedDevice?.iot_device_id === ConfDeviceInfo.devIdBlinds && (
                                 <>
-                                    <label>Light Level:</label>
-                                    <input
-                                        type="text"
-                                        className="form-control"
-                                        value={lightLevelBlinds}
-                                        onChange={(e) => setLightLevelBlinds(e.target.value)}
-                                        required
-                                    />
-                                    <label>Temperature:</label>
-                                    <input
-                                        type="text"
-                                        className="form-control"
-                                        value={temperBlinds}
-                                        onChange={(e) => setTemperBlinds(e.target.value)}
-                                        required
-                                    />
-                                    <label>Battery Level:</label>
-                                    <input
-                                        type="text"
-                                        className="form-control"
-                                        value={batLevelBlinds}
-                                        onChange={(e) => setBatLevelBlinds(e.target.value)}
-                                        required
-                                        readOnly
-                                    /> 
+                                <label>Light Level:</label>
+                                <input type="text" className="form-control" value={lightLevelBlinds} onChange={(e) => setLightLevelBlinds(e.target.value)} required />
+                                <label>Temperature:</label>
+                                <input type="text" className="form-control" value={temperBlinds} onChange={(e) => setTemperBlinds(e.target.value)} required />
+                                <label>Battery Level:</label>
+                                <input type="text" className="form-control" value={batLevelBlinds} onChange={(e) => setBatLevelBlinds(e.target.value)} required readOnly /> 
                                 </>
                             )}
                             {selectedDevice?.iot_device_id === ConfDeviceInfo.devIdAirCon && (
                                 <>
-                                    <label>Temperature:</label>
-                                    <input
-                                        type="text"
-                                        className="form-control"
-                                        value={temperAirCon}
-                                        onChange={(e) => setTemperAirCon(e.target.value)}
-                                        required
-                                    />
-                                    <label>Battery Level:</label>
-                                    <input
-                                        type="text"
-                                        className="form-control"
-                                        value={batLevelAirCon}
-                                        onChange={(e) => setBatLevelAirCon(e.target.value)}
-                                        required
-                                        readOnly
-                                    /> 
+                                <label>Temperature:</label>
+                                <input type="text" className="form-control" value={temperAirCon} onChange={(e) => setTemperAirCon(e.target.value)} required />
+                                <label>Battery Level:</label>
+                                <input type="text" className="form-control" value={batLevelAirCon} onChange={(e) => setBatLevelAirCon(e.target.value)} required readOnly /> 
                                 </>
                             )}
                             {selectedDevice?.iot_device_id === ConfDeviceInfo.devIdCameras && (
                                 <>
-                                    <label>Human Status:</label>
-                                    <input
-                                        type="text"
-                                        className="form-control"
-                                        value={humanStatus}
-                                        onChange={(e) => sethumanStatus(e.target.value)}
-                                        required
-                                        readOnly
-                                    />
-                                    <label>Battery Level:</label>
-                                    <input
-                                        type="text"
-                                        className="form-control"
-                                        value={batLevelCameras}
-                                        onChange={(e) => setBatLevelCameras(e.target.value)}
-                                        required
-                                        readOnly
-                                    /> 
+                                <label>Human Status:</label>
+                                <input type="text" className="form-control" value={humanStatus} onChange={(e) => sethumanStatus(e.target.value)} required readOnly />
+                                <label>Battery Level:</label>
+                                <input type="text" className="form-control" value={batLevelCameras} onChange={(e) => setBatLevelCameras(e.target.value)} required readOnly /> 
                                 </>
                             )}
                             {selectedDevice?.iot_device_id === ConfDeviceInfo.devIdWaterLeak && (
                                 <>
-                                    <label>Water Leakage Status:</label>
-                                    <input
-                                        type="text"
-                                        className="form-control"
-                                        value={waterLeak}
-                                        onChange={(e) => setWaterLeak(e.target.value)}
-                                        required
-                                        readOnly
-                                    />
-                                    <label>Battery Level:</label>
-                                    <input
-                                        type="text"
-                                        className="form-control"
-                                        value={batLevelWaterLeak}
-                                        onChange={(e) => setBatLevelWaterLeak(e.target.value)}
-                                        required
-                                        readOnly
-                                    /> 
+                                <label>Water Leakage Status:</label>
+                                <input type="text" className="form-control" value={waterLeak} onChange={(e) => setWaterLeak(e.target.value)} required readOnly />
+                                <label>Battery Level:</label>
+                                <input type="text" className="form-control" value={batLevelWaterLeak} onChange={(e) => setBatLevelWaterLeak(e.target.value)} required readOnly /> 
                                 </>
                             )}
                             {selectedDevice?.iot_device_id === ConfDeviceInfo.devIdBins && (
                                 <>
-                                    <label>Bins Level:</label>
-                                    <input
-                                        type="text"
-                                        className="form-control"
-                                        value={smartBins}
-                                        onChange={(e) => setSmartBins(e.target.value)}
-                                        required
-                                        readOnly
-                                    />
-                                    <label>Battery Level:</label>
-                                    <input
-                                        type="text"
-                                        className="form-control"
-                                        value={batLevelSmartBins}
-                                        onChange={(e) => setBatLevelSmartBins(e.target.value)}
-                                        required
-                                        readOnly
-                                    /> 
+                                <label>Bins Level:</label>
+                                <input type="text" className="form-control" value={smartBins} onChange={(e) => setSmartBins(e.target.value)} required readOnly />
+                                <label>Battery Level:</label>
+                                <input type="text" className="form-control" value={batLevelSmartBins} onChange={(e) => setBatLevelSmartBins(e.target.value)} required readOnly /> 
                                 </>
                             )}
                             {selectedDevice?.iot_device_id === ConfDeviceInfo.devIdRfidTags && (
                                 <>
-                                    <label>Object Position:</label>
-                                    <input
-                                        type="text"
-                                        className="form-control"
-                                        value={rfidTags}
-                                        onChange={(e) => setRfidTags(e.target.value)}
-                                        required
-                                        readOnly
-                                    />
-                                    <label>Battery Level:</label>
-                                    <input
-                                        type="text"
-                                        className="form-control"
-                                        value={batLevelRfidTags}
-                                        onChange={(e) => setBatLevelRfidTags(e.target.value)}
-                                        required
-                                        readOnly                                        
-                                    /> 
+                                <label>Object Position:</label>
+                                <input type="text" className="form-control" value={rfidTags} onChange={(e) => setRfidTags(e.target.value)} required readOnly />
+                                <label>Battery Level:</label>
+                                <input type="text" className="form-control" value={batLevelRfidTags} onChange={(e) => setBatLevelRfidTags(e.target.value)} required readOnly /> 
                                 </>
                             )}
 
@@ -416,18 +257,6 @@ export const ModalDevice = ({ modalShow, handleModalClose, selectedDevice, user_
         );
     } catch (error) {
         Logger.error(`${ModalDevice.name}(): ${error.message}`, error);
-
-        // render a fallback UI
-        return (
-            <Col md={4}>
-                <Card>
-                    <Card.Body>
-                        <div className="device-card-error">
-                            <h5 style={{ color: 'red' }}>Cannot display device information</h5>
-                        </div>
-                    </Card.Body>
-                </Card>
-            </Col>
-        );
+        MessageAlert('danger', 'Cannot display device information');
     }    
 };

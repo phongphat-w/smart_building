@@ -1,8 +1,9 @@
 import React from 'react';
 import { Col, Card, Button } from 'react-bootstrap';
 
-import getDeviceIcon from './dash-device-icons.js';
 import Logger from '../../com-utils/logger.js';
+import { MessageAlert } from '../page-utils/message-alert.js';
+import getDeviceIcon from './dash-icons.js';
 
 export const DeviceCard = ({ device, handleModalShow }) => {
     try {
@@ -31,19 +32,6 @@ export const DeviceCard = ({ device, handleModalShow }) => {
         );
     } catch (error) {
         Logger.error(`${DeviceCard.name}(): ${error.message}`, error);
-
-        // render a fallback UI
-        return (
-            <Col md={4}>
-                <Card>
-                    <Card.Body>
-                        <div className="device-card-error">
-                            <h5 style={{ color: 'red' }}>Error rendering device card</h5>
-                            <p>Device ID: {device?.iot_device_id || 'N/A'}</p>
-                        </div>
-                    </Card.Body>
-                </Card>
-            </Col>
-        );
+        MessageAlert('danger','Cannot display device information');
     }
 };

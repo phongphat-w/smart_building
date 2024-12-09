@@ -1,10 +1,10 @@
 import React from 'react';
-import { FaThermometerHalf, FaLightbulb, FaCloudSun, FaFan, FaCamera, FaSearch, FaUsers, FaWater, FaRecycle, FaBatteryHalf, FaWindows, FaChild, FaTrash } from 'react-icons/fa';
+import { FaThermometerHalf, FaLightbulb, FaCloudSun, FaFan, FaCamera, FaSearch, FaUsers, FaWater, FaRecycle, FaBatteryHalf, FaWindows, FaChild, FaTrash, FaCogs } from 'react-icons/fa';
 
 import ConfDeviceInfo from '../../com-utils/conf-device-Info.js';
 import Logger from '../../com-utils/logger.js';
 
-export function getDeviceIcon(device){
+export default function getDeviceIcon(device){
     try {
         switch (device.iot_device_id) {
             case ConfDeviceInfo.devIdThermostats: return <FaThermometerHalf size={30} color='red' />;
@@ -17,10 +17,10 @@ export function getDeviceIcon(device){
             case ConfDeviceInfo.devIdBins: return <FaRecycle size={30} color='brown' />;
             case ConfDeviceInfo.devIdBlinds: return <FaWindows size={30} color='pink' />;
             case ConfDeviceInfo.devIdPresence: return <FaChild size={30} color='blue' />;
-            default: return <FaSearch size={30} />;
+            default: return <FaCogs size={30} />;
         }
     } catch (error) {
         Logger.error(`${getDeviceIcon.name}(): ${error}`);
-        return <FaSearch size={30} />;
+        return <FaCogs size={30} />;
     }   
 };

@@ -1,4 +1,4 @@
-const ENABLE_EXTERNAL_LOGGING = process.env.REACT_APP_SB_ENABLE_LOGGING === 'true';
+const ENABLE_EXTERNAL_LOGGING = process.env.REACT_APP_SB_ENABLE_LOGGING_DB === 'true';
 // const LOGGING_API_URL = process.env.REACT_APP_LOGGING_API_URL;
 
 async function createLog(level, message, optionalParams) {

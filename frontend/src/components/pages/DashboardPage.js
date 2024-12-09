@@ -8,13 +8,14 @@ import { useNavigate } from 'react-router-dom';
 //--
 
 // Internal or project-specific imports
-import { getUserDetails } from './dashboard/dash-user.js';
+import { getUserDetails } from './page-utils/user-info.js';
 import { DashboardHeader } from './dashboard/dash-header.js';
 import { useFetchDevices } from './dashboard/dash-fetch.js';
 import { RenderDevices } from './dashboard/dash-render.js';
 import { ModalDevice } from './dashboard/dash-modal.js';
 
 import Logger from '../com-utils/logger.js';
+import { MessageAlert } from './page-utils/message-alert.js';
 
 // Styles and assets imports
 //--
@@ -72,26 +73,22 @@ const DashboardPage = () => {
             <div style={{ padding: '20px' }}>
                 <DashboardHeader setIsAdmin={setIsAdmin} setRoleName={setRoleName} />
 
-                <div>
+                <>
                     {deviceData && deviceData.length > 0 ? (
                         <RenderDevices deviceData={deviceData} handleModalShow={handleModalShow} />
                     ) : (
-                        <p>No devices found</p>
+                        MessageAlert('warning', 'No devices found')
                     )}
-                </div>
+                </>
                 
-                <ModalDevice                    
-                    modalShow={modalShow} 
-                    handleModalClose={handleModalClose} 
-                    selectedDevice={selectedDevice} 
-                    user_id={deviceData?.[0]?.user_id} // Pass user_id as a prop
-                />
+                <ModalDevice  modalShow={modalShow}  handleModalClose={handleModalClose}  selectedDevice={selectedDevice} user_id={deviceData?.[0]?.user_id} />
+                
             </div> //End of main div
         ); //End of return
     } catch (error){
         console.error(`${DashboardPage.name}(): Error - ' + ${error}`);
         Logger.error(`${DashboardPage.name}(): Error - ' + ${error}`);
-        
+        MessageAlert('danger', 'Cannot show dashboard appropriately')
     }
     
 };
