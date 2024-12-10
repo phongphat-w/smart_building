@@ -16,7 +16,7 @@ load_dotenv(dotenv_path = os.path.join(root_path, "", ".env"))
 
 # Define Kafka Consumer configuration
 consumer_config = {
-    "bootstrap.servers": f"""{os.getenv("SB__KAFKA_HOST")}:{os.getenv("SB__KAFKA_PORT")}""",  # Kafka server
+    "bootstrap.servers": f"""{os.getenv("SB_KAFKA_HOST")}:{os.getenv("SB_KAFKA_PORT")}""",  # Kafka server
     "group.id": "iot-consumer-group",
     "auto.offset.reset": "earliest"  # Start from the earliest message
 }
@@ -30,11 +30,11 @@ DB_PATH = os.path.join(root_path, "backend", "database", "iot_local_db")
 def get_timescaledb_connection():
     try:
         conn = psycopg2.connect(
-            host = os.getenv("SB__TIMESCALEDB_DB_HOST"),
-            port = os.getenv("SB__TIMESCALEDB_DB_PORT"),
-            dbname = os.getenv("SB__TIMESCALEDB_DB_NAME"),
-            user = os.getenv("SB__TIMESCALEDB_DB_USER"),
-            password = os.getenv("SB__TIMESCALEDB_DB_PASSWORD")            
+            host = os.getenv("SB_TIMESCALEDB_DB_HOST"),
+            port = os.getenv("SB_TIMESCALEDB_DB_PORT"),
+            dbname = os.getenv("SB_TIMESCALEDB_DB_NAME"),
+            user = os.getenv("SB_TIMESCALEDB_DB_USER"),
+            password = os.getenv("SB_TIMESCALEDB_DB_PASSWORD")            
         )
         return conn
     except Exception as e:
@@ -118,12 +118,12 @@ def get_iot_info(iot_device_id):
     if timescale_conn:
         cursor = timescale_conn.cursor()
         cursor.execute(f"""
-            Select a.account_id::char(36), c.client_id::char(36), c.client_name, d.country_name, d.time_zone
+            Select a.account_id, c.client_id, c.client_name, d.country_name, d.time_zone
             From iot_device a
-            Inner Join account b On a.account_id = b.account_id::char(36)
-            Inner Join client c On b.client_id = c.client_id::char(36)
+            Inner Join account b On a.account_id = b.account_id
+            Inner Join client c On b.client_id = c.client_id
             Inner Join country d On c.country_id = d.country_id
-            Where a.iot_device_id::char(36) = '{iot_device_id}'
+            Where a.iot_device_id = '{iot_device_id}'
             """
         )
         row = cursor.fetchall()
@@ -180,7 +180,7 @@ def fetch_unsynced_data_from_sqlite(iot_device_id):
 # Main
 def consume_and_send_to_kafka(iot_device_id):
     consumer.subscribe(["iot_data_topic"])  # Subscribe to the Kafka topic
-    time_sleep = int(os.getenv("SB__KAFKA_DATA_FREQUENCY"))
+    time_sleep = int(os.getenv("SB_KAFKA_DATA_FREQUENCY"))
     
     try:
         while True:

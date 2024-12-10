@@ -1,7 +1,7 @@
 import { Alert } from 'react-bootstrap';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
-import Logger from '../../com-utils/logger.js';
+import Logger from './logger.js';
 
 export const MessageAlert = ({ alertType, messageAlert }) => {
     try {

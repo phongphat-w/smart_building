@@ -3,7 +3,7 @@ import { Form, Table, Button, Badge } from 'react-bootstrap';
 import { FaThermometerHalf, FaLightbulb, FaCloudSun, FaFan, FaCamera, FaSearch, FaUsers, FaWater, FaRecycle, FaBatteryHalf, FaWindows, FaChild, FaTrash, FaTools } from 'react-icons/fa'; // Importing icons
 
 import Logger from '../../com-utils/logger.js';
-import { MessageAlert } from '../page-utils/message-alert.js';
+import { MessageAlert } from '../../com-utils/message-alert.js';
 import ConfDeviceInfo from '../../com-utils/conf-device-Info.js';
 import getDeviceIcon from './dash-icons.js';
 
@@ -12,7 +12,7 @@ const RECORD_PER_PAGE = process.env.REACT_APP_SB_RECORD_PER_PAGE;
 export const RenderDeviceTable = ({ deviceData, handleModalShow }) => {
     try {
         // State variables for pagination
-        const recordsPerPage = RECORD_PER_PAGE;
+        const recordsPerPage = RECORD_PER_PAGE || 10;
         const [currentPage, setCurrentPage] = useState(1);
 
         // State variables for search
@@ -302,9 +302,35 @@ export const RenderDeviceTable = ({ deviceData, handleModalShow }) => {
                                 <td>{device.building_id}</td>
                                 <td>{device.floor_id}</td>
                                 <td>{device.room_id}</td>
-                                <td style={{ textAlign: 'center' }}>
+                                {/* <td style={{ textAlign: 'center' }}>
                                     <Button onClick={() => handleModalShow(device)} variant="success"><FaTools></FaTools></Button>
-                                    </td>
+                                </td> */}
+                                <td style={{ textAlign: 'center' }}>
+                                    <Button
+                                        onClick={() => handleModalShow(device)}
+                                        style={{
+                                            backgroundColor: '#A2CFFF', // Pastel blue
+                                            border: 'none',            // Remove border
+                                            color: '#FFFFFF',          // White text
+                                            padding: '8px 16px',       // Adjust padding
+                                            fontWeight: 'bold',        // Bold text
+                                            fontSize: '0.85rem', // Smaller font size
+                                            borderRadius: '5px',       // Rounded corners
+                                            boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)', // Soft shadow
+                                            transition: 'transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out', // Interaction effects
+                                        }}
+                                        onMouseEnter={(e) => {
+                                            e.target.style.transform = 'scale(1.1)'; // Enlarge on hover
+                                            e.target.style.boxShadow = '0 6px 12px rgba(0, 0, 0, 0.15)'; // Stronger shadow on hover
+                                        }}
+                                        onMouseLeave={(e) => {
+                                            e.target.style.transform = 'scale(1)'; // Reset size on mouse leave
+                                            e.target.style.boxShadow = '0 4px 8px rgba(0, 0, 0, 0.1)'; // Reset shadow
+                                        }}
+                                    >
+                                        <FaTools color='blue' />
+                                    </Button>
+                                </td>
                             </tr>
                             );
                         })}

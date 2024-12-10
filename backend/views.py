@@ -1,5 +1,8 @@
+#Authenication
+from backend.views_utils.authentication import get_api_map, get_gpt_con
+
 #User register, login, user's dashboard
-from backend.views_utils.guest import register_guest, login_guest, refresh_token, get_user_devices
+from backend.views_utils.guest import register_guest, login_guest, refresh_token
 
 #Admin
 from backend.views_utils.users import get_users

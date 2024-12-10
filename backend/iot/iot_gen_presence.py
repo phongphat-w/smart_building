@@ -100,15 +100,15 @@ def create_iot_config(iot_device_id):
 
             data = {
                 "device_id": iot_device_id,
-                "auto_flag": int(os.getenv("SB__GEN_DATA_MODE")),
+                "auto_flag": int(os.getenv("SB_GEN_DATA_MODE")),
                 "sensors": {
                     "object_status": 0,
                     "battery_level": 70.00
                 },
                 "create_at": current_time,
-                "create_by": os.getenv("SB__USER_ADMIN_ID"),
+                "create_by": os.getenv("SB_USER_ADMIN_ID"),
                 "update_at": current_time,
-                "update_by": os.getenv("SB__USER_ADMIN_ID"),
+                "update_by": os.getenv("SB_USER_ADMIN_ID"),
             }
 
             # Write data to a JSON file
@@ -209,7 +209,7 @@ def store_data(iot_device_id, data):
         
 # Main
 def iot_generator(iot_device_id):
-    time_sleep = int(os.getenv("SB__GEN_DATA_FREQUENCY"))
+    time_sleep = int(os.getenv("SB_GEN_DATA_FREQUENCY"))
     while True:        
         result_iot_con, auto_mode = create_iot_config(iot_device_id)
         if result_iot_con == True:

@@ -2,7 +2,7 @@ import React from 'react';
 import { Col, Card, Button } from 'react-bootstrap';
 
 import Logger from '../../com-utils/logger.js';
-import { MessageAlert } from '../page-utils/message-alert.js';
+import { MessageAlert } from '../../com-utils/message-alert.js';
 import getDeviceIcon from './dash-icons.js';
 
 export const DeviceCard = ({ device, handleModalShow }) => {

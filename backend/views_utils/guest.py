@@ -1,13 +1,13 @@
 # Import block according to Python Enhancement Proposal 8 (PEP 8) guidelines.
 
 # Standard library imports
-import datetime
+from datetime import datetime
 import inspect
 import logging
-import os
-import uuid
 
 # Third-party imports
+from django.conf import settings
+
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
@@ -22,7 +22,6 @@ from backend.database.db_connect import DbConnect
 from backend.models import Guest
 from backend.models_utils.auth_backend import EmailBackend
 from backend.serializers import GuestSerializer
-
 
 # Set up a logger instance
 logger = logging.getLogger(__name__)
@@ -43,7 +42,7 @@ def get_user_info(email):
         sql_cmd = """
                 SELECT
                 DISTINCT
-                a.id::char(36)
+                a.id
                 , a.first_name
                 , a.last_name
                 , a.checkin_date::text
@@ -74,32 +73,35 @@ def get_user_info(email):
         logger.exception(f"{inspect.currentframe().f_code.co_name}(): Error fetching user info: {e}")
         return "[]" #Json empty
         db.close()
-
-        
+       
 
 @api_view(["POST"])
 @permission_classes([AllowAny])  # Allow any user to register
 def register_guest(request):
     try:
         if request.method == "POST":
+            data = request.data
             # Extract data from the request
-            first_name = request.data.get("first_name")
-            last_name = request.data.get("last_name")
-            password = request.data.get("password")
-            email = request.data.get("email")
-            checkin_date = request.data.get("checkin_date")
-            checkout_date = request.data.get("checkout_date")
-            building_id = request.data.get("building_id")
-            floor_id = request.data.get("floor_id")
-            room_id = request.data.get("room_id")
+            first_name = data.get("first_name")
+            last_name = data.get("last_name")
+            password = data.get("password")
+            email = data.get("email")
+            checkin_date = data.get("checkin_date")
+            checkout_date = data.get("checkout_date")
+            building_id = data.get("building_id")
+            floor_id = data.get("floor_id")
+            room_id = data.get("room_id")
 
-            # Validate the input data
-            if not first_name or not last_name or not password or not email or not checkin_date or not checkout_date or not building_id or not floor_id or not room_id:
-                logger.warning(f"{inspect.currentframe().f_code.co_name}(): All fields are required, please verify.")
-                return Response({"error": "All fields are required, please verify."}, status=status.HTTP_400_BAD_REQUEST)
+            # Validate the input data            
+            required_fields = ["first_name", "last_name", "password", "email", "checkin_date", "checkout_date", "building_id", "floor_id", "room_id"]
+            missing_fields = [field for field in required_fields if not data.get(field)]
+            if missing_fields:
+                logger.warning(f"Missing fields: {missing_fields}")
+                return Response({"warning": f"All fields are required, please verify. Missing fields: {', '.join(missing_fields)}"}, status=status.HTTP_400_BAD_REQUEST)
 
             # Create the new guest
-            guest = Guest.objects.create_user(
+            user = Guest.objGuestManager.create_user(
+                #id: default
                 first_name=first_name,
                 last_name=last_name,
                 password=password,
@@ -108,24 +110,22 @@ def register_guest(request):
                 checkout_date=checkout_date,
                 building_id=building_id,
                 floor_id=floor_id,
-                room_id=room_id
+                room_id=room_id,
+                role_id=settings.SB_ROLE_ID.get("SB_ROLE_ID_GUEST")
             )
-            logger.info(f"{inspect.currentframe().f_code.co_name}(): Guest created with user_id: {guest.id}")
+            logger.info(f"{inspect.currentframe().f_code.co_name}(): Guest created with user_id: {user.id}")
 
             # Generate JWT tokens for the guest
-            access_token, refresh_token = create_tokens_for_user(guest)
-            logger.info(f"{inspect.currentframe().f_code.co_name}(): Access Token: {access_token}")
-            logger.info(f"{inspect.currentframe().f_code.co_name}(): Refresh Token: {refresh_token}")
+            # access_token, refresh_token = create_tokens_for_user(guest)
+            # logger.info(f"{inspect.currentframe().f_code.co_name}(): Access Token: {access_token}")
+            # logger.info(f"{inspect.currentframe().f_code.co_name}(): Refresh Token: {refresh_token}")
 
             # Serializer to return the guest data
-            serializer = GuestSerializer(guest)
+            serializer = GuestSerializer(user)
 
             # Return the guest data along with tokens
             return Response({
-                "message": "Registration successful",
-                "sb_access_token": access_token,  # Access token
-                "sb_refresh_token": refresh_token,  # Refresh token
-                "guest": serializer.data  # Return guest data
+                "message": "Register successfully."
             }, status=status.HTTP_201_CREATED)
         else:
             logger.warning(f"{inspect.currentframe().f_code.co_name}(): Method is not accepted")
@@ -136,6 +136,119 @@ def register_guest(request):
         logger.exception(f"{inspect.currentframe().f_code.co_name}(): Error during registration: {e}")
         return Response({"error": f"Cannot register! - {e}"}, status=status.HTTP_400_BAD_REQUEST)
 
+@api_view(["POST"])
+@permission_classes([AllowAny])  # Allow any user to register
+def register_staff(request):
+    try:
+        if request.method == "POST":
+            data = request.data
+            # Extract data from the request
+            first_name = data.get("first_name")
+            last_name = data.get("last_name")
+            password = data.get("password")
+            email = data.get("email")
+            building_id = data.get("building_id")
+            floor_id = data.get("floor_id")
+            role_id = data.get("role_id")
+
+            # Validate the input data            
+            required_fields = ["first_name", "last_name", "password", "email", "building_id", "floor_id", "role_id"]
+            missing_fields = [field for field in required_fields if not data.get(field)]
+            if missing_fields:
+                logger.warning(f"Missing fields: {missing_fields}")
+                return Response({"warning": f"All fields are required, please verify. Missing fields: {', '.join(missing_fields)}"}, status=status.HTTP_400_BAD_REQUEST)
+
+            # Create the new guest
+            user = Guest.objGuestManager.create_staff(
+                #id: default
+                first_name=first_name,
+                last_name=last_name,
+                password=password,
+                email=email,
+                building_id=building_id,
+                floor_id=floor_id,
+                role_id=settings.SB_ROLE_ID.get("SB_ROLE_ID_STAFF")
+            )
+            logger.info(f"{inspect.currentframe().f_code.co_name}(): Guest created with user_id: {user.id}")
+
+            # Generate JWT tokens for the guest
+            # access_token, refresh_token = create_tokens_for_user(guest)
+            # logger.info(f"{inspect.currentframe().f_code.co_name}(): Access Token: {access_token}")
+            # logger.info(f"{inspect.currentframe().f_code.co_name}(): Refresh Token: {refresh_token}")
+
+            # Serializer to return the guest data
+            serializer = GuestSerializer(user)
+
+            # Return the guest data along with tokens
+            return Response({
+                "message": "Register successfully."
+            }, status=status.HTTP_201_CREATED)
+        else:
+            logger.warning(f"{inspect.currentframe().f_code.co_name}(): Method is not accepted")
+            return Response({"error": "Cannot register!"}, status=status.HTTP_400_BAD_REQUEST)
+    
+    except Exception as e:
+        print(f"""{datetime.now()}: {inspect.currentframe().f_code.co_name}(): Error - {e}""")
+        logger.exception(f"{inspect.currentframe().f_code.co_name}(): Error during registration: {e}")
+        return Response({"error": f"Cannot register! - {e}"}, status=status.HTTP_400_BAD_REQUEST)
+    
+
+@api_view(["POST"])
+@permission_classes([AllowAny])  # Allow any user to register
+def register_admin(request):
+    try:
+        if request.method == "POST":
+            data = request.data
+            # Extract data from the request
+            first_name = data.get("first_name")
+            last_name = data.get("last_name")
+            password = data.get("password")
+            email = data.get("email")
+            building_id = data.get("building_id")
+            # floor_id = data.get("floor_id")
+            role_id = data.get("role_id")
+
+            # Validate the input data            
+            required_fields = ["first_name", "last_name", "password", "email", "building_id", "role_id"]
+            missing_fields = [field for field in required_fields if not data.get(field)]
+            if missing_fields:
+                logger.warning(f"Missing fields: {missing_fields}")
+                return Response({"warning": f"All fields are required, please verify. Missing fields: {', '.join(missing_fields)}"}, status=status.HTTP_400_BAD_REQUEST)
+
+            # Create the new guest
+            user = Guest.objGuestManager.create_admin(
+                #id: default
+                first_name=first_name,
+                last_name=last_name,
+                password=password,
+                email=email,
+                building_id=building_id,
+                # floor_id=floor_id,
+                role_id=settings.SB_ROLE_ID.get("SB_ROLE_ID_ADMIN")
+            )
+            logger.info(f"{inspect.currentframe().f_code.co_name}(): Guest created with user_id: {user.id}")
+
+            # Generate JWT tokens for the guest
+            # access_token, refresh_token = create_tokens_for_user(guest)
+            # logger.info(f"{inspect.currentframe().f_code.co_name}(): Access Token: {access_token}")
+            # logger.info(f"{inspect.currentframe().f_code.co_name}(): Refresh Token: {refresh_token}")
+
+            # Serializer to return the guest data
+            serializer = GuestSerializer(user)
+
+            # Return the guest data along with tokens
+            return Response({
+                "message": "Register successfully."
+            }, status=status.HTTP_201_CREATED)
+        else:
+            logger.warning(f"{inspect.currentframe().f_code.co_name}(): Method is not accepted")
+            return Response({"error": "Cannot register!"}, status=status.HTTP_400_BAD_REQUEST)
+    
+    except Exception as e:
+        print(f"""{datetime.now()}: {inspect.currentframe().f_code.co_name}(): Error - {e}""")
+        logger.exception(f"{inspect.currentframe().f_code.co_name}(): Error during registration: {e}")
+        return Response({"error": f"Cannot register! - {e}"}, status=status.HTTP_400_BAD_REQUEST)
+    
 
 @api_view(["POST"])
 @permission_classes([AllowAny])  # Allow any user to login
@@ -171,9 +284,11 @@ def login_guest(request):
             print("DEBUG: user_info = ", user_info)
             return Response({
                 "message": "Login successful",
-                "sb_access_token": access_token,  # Return access token, short-lived token
-                "sb_refresh_token": refresh_token,  # Return refresh token, long-lived token
-                "sb_user_info": user_info, # User info
+                "data": {
+                    "sb_access_token": access_token,  # Return access token, short-lived token
+                    "sb_refresh_token": refresh_token,  # Return refresh token, long-lived token
+                    "sb_user_info": user_info, # User info
+                }
             }, status=status.HTTP_200_OK)
 
     except Exception as e:
@@ -213,48 +328,49 @@ def refresh_token(request):
         return Response({"error": str(e)}, status=400)
 
 
-@api_view(["GET"])
-@permission_classes([IsAuthenticated])
-def get_user_devices(request):
-    db = DbConnect()
-    try:
-        # Get the guest ID
-        user_id = request.user.id
-        logger.info(f"{inspect.currentframe().f_code.co_name}(): Fetching devices for user_id: {user_id}")
+# @api_view(["GET"])
+# @permission_classes([IsAuthenticated])
+# def get_user_devices(request):
+#     db = DbConnect()
+#     try:
+#         # Get the guest ID
+#         user_id = request.user.id
+#         logger.info(f"{inspect.currentframe().f_code.co_name}(): Fetching devices for user_id: {user_id}")
 
-        db.connect()
-        sql_cmd = """
-                SELECT 
-                    a.iot_device_id, 
-                    a.device_sub_type_id, 
-                    a.account_id, 
-                    a.building_id, 
-                    a.floor_id, 
-                    a.room_id
-                FROM 
-                    iot_device a
-                JOIN 
-                    backend_guest b ON
-                    a.building_id = b.building_id AND 
-                    a.floor_id = b.floor_id AND 
-                    a.room_id = b.room_id
-                WHERE 
-                    b.id = %s;
-            """
-        params = (user_id,)
-        result = db.execute_query(sql_cmd, params)
+#         db.connect()
+#         sql_cmd = """
+#                 SELECT 
+#                     a.iot_device_id, 
+#                     a.device_sub_type_id, 
+#                     a.account_id, 
+#                     a.building_id, 
+#                     a.floor_id, 
+#                     a.room_id
+#                 FROM 
+#                     iot_device a
+#                 JOIN 
+#                     backend_guest b ON
+#                     a.building_id = b.building_id AND 
+#                     a.floor_id = b.floor_id AND 
+#                     a.room_id = b.room_id
+#                 WHERE 
+#                     b.id = %s;
+#             """
+#         params = (user_id,)
+#         result = db.execute_query(sql_cmd, params)
 
-        if result:
-            logger.info(f"{inspect.currentframe().f_code.co_name}(): Devices fetched successfully for user_id: {user_id}")
-            return Response({"message": "Devices fetched successfully!", "user_id": user_id, "data": result}, status=status.HTTP_200_OK)
-        else:
-            logger.info(f"{inspect.currentframe().f_code.co_name}(): No device found for user_id: {user_id}")
-            return Response({"message": "No device found for user.", "user_id": user_id, "data": result}, status=status.HTTP_200_OK)
+#         if result:
+#             logger.info(f"{inspect.currentframe().f_code.co_name}(): Devices fetched successfully for user_id: {user_id}")
+#             return Response({"message": "Devices fetched successfully!", "user_id": user_id, "data": result}, status=status.HTTP_200_OK)
+#         else:
+#             logger.info(f"{inspect.currentframe().f_code.co_name}(): No device found for user_id: {user_id}")
+#             return Response({"message": "No device found for user.", "user_id": user_id, "data": result}, status=status.HTTP_200_OK)
     
-    except Exception as e:
-        print(f"""{datetime.now()}: {inspect.currentframe().f_code.co_name}(): Error - {e}""")
-        logger.exception(f"{inspect.currentframe().f_code.co_name}(): Error fetching devices: {e}")
-        return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+#     except Exception as e:
+#         print(f"""{datetime.now()}: {inspect.currentframe().f_code.co_name}(): Error - {e}""")
+#         logger.exception(f"{inspect.currentframe().f_code.co_name}(): Error fetching devices: {e}")
+#         return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
-    finally:
-        db.close()
+#     finally:
+#         db.close()
+

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import { jwtDecode } from "jwt-decode";
 
-const API_URL = process.env.REACT_APP_SB__API_URL + ":" + process.env.REACT_APP_SB__API_PORT;
+const API_URL = process.env.REACT_APP_SB_API_URL + ":" + process.env.REACT_APP_SB_API_PORT;
 
 const LoginPage = () => {
   // State variables for the form fields, error messages, and user info

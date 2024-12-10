@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import Logger from '../../com-utils/logger.js';
-import { MessageAlert } from '../page-utils/message-alert.js';
+import { MessageAlert } from '../../com-utils/message-alert.js';
 
 import { RenderViewToggle } from './dash-render-toggle.js';
 import { RenderDeviceTable } from './dash-render-table.js';

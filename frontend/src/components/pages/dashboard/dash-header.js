@@ -4,8 +4,8 @@ import { FaUsers } from 'react-icons/fa';
 import { Button } from 'react-bootstrap';
 
 import Logger from '../../com-utils/logger.js';
-import { MessageAlert } from '../page-utils/message-alert.js';
-import { getUserDetails } from '../page-utils/user-info.js';
+import { MessageAlert } from '../../com-utils/message-alert.js';
+import { getUserDetails } from '../../com-utils/user-info.js';
 
 
 // it's not a custom hook but a React component.
@@ -28,7 +28,7 @@ export const DashboardHeader = ({ setIsAdmin, setRoleName }) => {
         return (
             <div>
                 <center><h1>Smart Building Dashboard</h1></center>
-                {`Welcome: ${user_info?.loginDisplay || '-'}`} 
+                <h5>{`Welcome: ${user_info?.loginDisplay || '-'}`}</h5> 
                 {/* <button className="btn btn-primary btn-sm" onClick={signOut} style={{ position: 'absolute', top: '10px', right: '10px' }}>
                     <FaUsers></FaUsers>&nbsp;Sign Out
                 </button> */}

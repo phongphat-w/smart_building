@@ -1,7 +1,7 @@
 import { Pie, Line } from 'react-chartjs-2';
 
 import Logger from '../../com-utils/logger.js';
-import { MessageAlert } from '../page-utils/message-alert.js';
+import { MessageAlert } from '../../com-utils/message-alert.js';
 
 function ElectricityUsageChart(chartDataElecFloor){
     try {

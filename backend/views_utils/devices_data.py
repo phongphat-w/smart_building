@@ -1,7 +1,7 @@
 # Import block according to Python Enhancement Proposal 8 (PEP 8) guidelines.
 
 # Standard library imports
-import datetime
+from datetime import datetime
 import inspect
 import logging
 import os

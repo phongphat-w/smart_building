@@ -1,4 +1,4 @@
-import Logger from '../../com-utils/logger.js';
+import Logger from './logger.js';
 
 // Functions to retrieve data from localStorage
 export const useGetAuthToken = () => localStorage.getItem('sb_access_token');

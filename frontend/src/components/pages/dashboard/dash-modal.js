@@ -3,7 +3,7 @@ import { Modal, Button, Col, Card } from 'react-bootstrap';
 import { useHandleSubmit } from './dash-submit.js';
 
 import Logger from '../../com-utils/logger.js';
-import { MessageAlert } from '../page-utils/message-alert.js';
+import { MessageAlert } from '../../com-utils/message-alert.js';
 import ConfDeviceInfo from '../../com-utils/conf-device-Info.js';
 
 export const ModalDevice = ({ modalShow, handleModalClose, selectedDevice, user_id }) => {

@@ -10,54 +10,88 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 
+from datetime import timedelta
+from dotenv import load_dotenv
+import json
 from pathlib import Path
-import os
-# from dotenv import load_dotenv
-from datetime import datetime, timedelta
 from logging.handlers import TimedRotatingFileHandler
+import os
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 os.environ["BASE_DIR"] = str(BASE_DIR)
 
+#=========================================================
+# Load environment variables from .env file
+#=========================================================
+load_dotenv(dotenv_path = os.path.join(BASE_DIR, "backend" , ".env"))
+
+
+# Back-end (Django) -------------------------------------
+
+SB_PROJECT_NAME=os.getenv("SB_PROJECT_NAME")
 
 #Django
-SB__DJANGO_DEBUG = True
-SB__DJANGO_DB_HOST = "localhost"
-SB__DJANGO_DB_PORT = "5432"
-SB__DJANGO_DB_NAME = "smart_building"
-SB__DJANGO_DB_USER = "postgres"
-SB__DJANGO_DB_PASSWORD = "password"
+DJANGO_SECRET_KEY=os.getenv("DJANGO_SECRET_KEY")
+DJANGO_DEBUG=os.getenv("DJANGO_DEBUG")
+
+DJANGO_DB_HOST=os.getenv("DJANGO_DB_HOST")
+DJANGO_DB_PORT=os.getenv("DJANGO_DB_PORT")
+DJANGO_DB_NAME=os.getenv("DJANGO_DB_NAME")
+DJANGO_DB_USER=os.getenv("DJANGO_DB_USER")
+DJANGO_DB_PASSWORD=os.getenv("DJANGO_DB_PASSWORD")
+
+# Access specific roles
+try:
+    SB_ROLE_ID = json.loads(os.getenv("SB_ROLE_ID", "{}"))
+except json.JSONDecodeError:
+    raise ValueError("Invalid SB_ROLE_ID format in .env file")
 
 ## Local DB
 #SQLite
-os.environ["SB__GEN_DATA_FREQUENCY"] = "5" #Second, must be string not integer
+SB_GEN_DATA_FREQUENCY=os.getenv("SB_GEN_DATA_FREQUENCY")
 
 #IOT Json configuration file
-os.environ["SB__GEN_DATA_MODE"] = "1" #Auto generate, must be string not integer
+SB_IOT_GEN_DATA_MODE=os.getenv("SB_IOT_GEN_DATA_MODE")
 
 #TimeScaleDB
-os.environ["SB__TIMESCALEDB_DB_HOST"] = "localhost"
-os.environ["SB__TIMESCALEDB_DB_PORT"] = "5432"
-os.environ["SB__TIMESCALEDB_DB_NAME"] = "smart_building"
-os.environ["SB__TIMESCALEDB_DB_USER"] = "postgres"
-os.environ["SB__TIMESCALEDB_DB_PASSWORD"] = "password"
-
-os.environ["SB__USER_ADMIN_ID"] = "55a6d8ae-e242-45c1-8bd0-db4975cc366a"
+SB_TIMESCALEDB_DB_HOST=os.getenv("SB_TIMESCALEDB_DB_HOST")
+SB_TIMESCALEDB_DB_PORT=os.getenv("SB_TIMESCALEDB_DB_PORT")
+SB_TIMESCALEDB_DB_NAME=os.getenv("SB_TIMESCALEDB_DB_NAME")
+SB_TIMESCALEDB_DB_USER=os.getenv("SB_TIMESCALEDB_DB_USER")
+SB_TIMESCALEDB_DB_PASSWORD=os.getenv("SB_TIMESCALEDB_DB_PASSWORD")
 
 #Kafka server
-os.environ["SB__KAFKA_HOST"] = "localhost"
-os.environ["SB__KAFKA_PORT"] = "9092"
-os.environ["SB__KAFKA_DATA_FREQUENCY"] = "5" #Second, must be string not integer
+SB_KAFKA_HOST=os.getenv("SB_KAFKA_HOST")
+SB_KAFKA_PORT=os.getenv("SB_KAFKA_PORT")
+SB_KAFKA_DATA_FREQUENCY=os.getenv("SB_KAFKA_DATA_FREQUENCY")
 
 
-#load_dotenv(dotenv_path = os.path.join(BASE_DIR, "configuration", ".env"))
+# Front-end (React.js) -------------------------------------
+
+SB_MAP_TOKEN = os.getenv("SB_MAP_TOKEN")
+SB_GPT_AZURE_ENDPOINT = os.getenv("SB_GPT_AZURE_ENDPOINT")
+SB_GPT_API_KEY = os.getenv("SB_GPT_API_KEY")
+SB_GPT_ASSISTANT_ID = os.getenv("SB_GPT_ASSISTANT_ID")
+
+#=========================================================
+
+
+# Define Kafka Consumer configuration
+consumer_config = {
+    "bootstrap.servers": f"""{os.getenv("SB_KAFKA_HOST")}:{os.getenv("SB_KAFKA_PORT")}""",  # Kafka server
+    "group.id": "iot-consumer-group",
+    "auto.offset.reset": "earliest"  # Start from the earliest message
+}
+
+
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-y90jd^qnq+qr8rghsdw%$u84dt!kq0245r+@^sd0zngxwv(6c7'
+SECRET_KEY = os.getenv("DJANGO_SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -80,6 +114,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework_simplejwt',
     'rest_framework.authtoken',
+    'channels',
     
     #'backend.apps.BackendConfig',  # Make sure the correct AppConfig is used
     
@@ -124,6 +159,18 @@ PASSWORD_HASHERS = [
     'django.contrib.auth.hashers.PBKDF2SHA1PasswordHasher',
     'django.contrib.auth.hashers.BCryptSHA256PasswordHasher',
 ]
+
+ASGI_APPLICATION = 'smartbuilding.asgi.application'
+
+# Redis Channel Layer
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        'CONFIG': {
+            'hosts': [('redis', 6379)],  # Use the Redis container name
+        },
+    },
+}
 
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware', # This must be at the top
@@ -190,11 +237,11 @@ WSGI_APPLICATION = 'smart_building.wsgi.application'
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
-        "NAME": os.getenv("SB__TIMESCALEDB_DB_NAME"),
-        "USER": os.getenv("SB__TIMESCALEDB_DB_USER"),
-        "PASSWORD": os.getenv("SB__TIMESCALEDB_DB_PASSWORD"),
-        "HOST": os.getenv("SB__TIMESCALEDB_DB_HOST"),
-        "PORT": os.getenv("SB__TIMESCALEDB_DB_PORT"),
+        "HOST": DJANGO_DB_HOST,
+        "PORT": DJANGO_DB_PORT,
+        "NAME": DJANGO_DB_NAME,
+        "USER": DJANGO_DB_USER,
+        "PASSWORD": DJANGO_DB_PASSWORD,
     }
 }
 
@@ -244,8 +291,6 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 #============================
 # Logging system
 #============================
-"""
-import os
 
 # Ensure the logs directory exists
 log_dir = os.path.join(BASE_DIR, 'logs')
@@ -253,7 +298,7 @@ if not os.path.exists(log_dir):
     os.makedirs(log_dir)
 
 # Set the logging level. Use 'DEBUG' for development and 'INFO' for production.
-log_level = 'DEBUG'  # Captures all log levels (DEBUG, INFO, WARNING, ERROR, CRITICAL)
+DJANGO_LOG_LEVEL = os.getenv("DJANGO_LOG_LEVEL")  # DEBUG captures all log levels (DEBUG, INFO, WARNING, ERROR, CRITICAL)
 
 LOGGING = {
     'version': 1,
@@ -261,19 +306,24 @@ LOGGING = {
     'handlers': {
         # Timed Rotating File Handler for daily log rotation
         'timed_rotating_file': {
-            'level': log_level,
+            'level': DJANGO_LOG_LEVEL,
             'class': 'logging.handlers.TimedRotatingFileHandler',
             'filename': os.path.join(log_dir, 'django.log'),
             'when': 'midnight',  # Rotate logs at midnight
             'interval': 1,  # Rotate every day
-            'backupCount': 366,  # Retain logs for the last 366 days
+            'backupCount': 500,  # Retain logs for the last 500 days
             'formatter': 'verbose',
         },
         # Console Handler for real-time log output
         'console': {
-            'level': log_level,
+            'level': DJANGO_LOG_LEVEL,
             'class': 'logging.StreamHandler',
             'formatter': 'verbose',
+        },
+        # DB log
+        'db': {
+            'level': DJANGO_LOG_LEVEL,
+            'class': 'backend.models_utils.log_handler.DatabaseLogHandler',  # Path to DatabaseLogHandler()
         },
     },
     'formatters': {
@@ -284,18 +334,25 @@ LOGGING = {
         },
     },
     'loggers': {
-        # Main Django logger
+        # Main Django logger (Parent)
         'django': {
-            'handlers': ['timed_rotating_file', 'console'],  # Log to file and console
-            'level': log_level,  # Use the defined logging level
+            'handlers': [
+                        'timed_rotating_file', 
+                         'db', 
+                         'console'
+                         ],  # Log to file, database and console
+            'level': DJANGO_LOG_LEVEL,  # Use the defined logging level
             'propagate': True,  # Allow propagation to parent loggers
         },
-        # Database logger for SQL queries (if needed)
+        # Database logger for SQL queries (Child Log)
         'django.db.backends': {
-            'handlers': ['timed_rotating_file'],  # Log SQL queries to file only
-            'level': log_level,  # Use the defined logging level
-            'propagate': False,  # Prevent logs from propagating to parent loggers
+            'handlers': [
+                        'timed_rotating_file', 
+                         'db', 
+                         'console'
+                         ],  # Log to file, database and console
+            'level': DJANGO_LOG_LEVEL,  # Use the defined logging level
+            'propagate': False,  # Prevent logs from propagating to parent loggers (Main Django logger)
         },
     }
 } # End Logging
-"""

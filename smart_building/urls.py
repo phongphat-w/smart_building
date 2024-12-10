@@ -31,9 +31,11 @@ urlpatterns = [
 
     path("admin/", admin.site.urls),
 
+    path("api/authen/get_api_map", views.get_api_map),
+    path("api/authen/get_gpt_con", views.get_gpt_con),
+
     path("api/register_guest/", views.register_guest),
     path("api/login_guest/", views.login_guest),
-    path("api/get_user_devices/", views.get_user_devices),
 
     # path('api/token/refresh/', TokenRefreshView.as_view()),
     path('api/token/refresh/', views.refresh_token),

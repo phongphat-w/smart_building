@@ -8,19 +8,19 @@ import { useNavigate } from 'react-router-dom';
 //--
 
 // Internal or project-specific imports
-import { getUserDetails } from './page-utils/user-info.js';
+import { getUserDetails } from '../com-utils/user-info.js';
 import { DashboardHeader } from './dashboard/dash-header.js';
 import { useFetchDevices } from './dashboard/dash-fetch.js';
 import { RenderDevices } from './dashboard/dash-render.js';
 import { ModalDevice } from './dashboard/dash-modal.js';
 
 import Logger from '../com-utils/logger.js';
-import { MessageAlert } from './page-utils/message-alert.js';
+import { MessageAlert } from '../com-utils/message-alert.js';
 
 // Styles and assets imports
 //--
 
-const API_HOST = process.env.REACT_APP_SB__API_URL + ":" + process.env.REACT_APP_SB__API_PORT;
+const API_HOST = process.env.REACT_APP_SB_API_URL + ":" + process.env.REACT_APP_SB_API_PORT;
 
 const DashboardPage = () => {
     try {

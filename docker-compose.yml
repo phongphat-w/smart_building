@@ -1,0 +1,83 @@
+version: "3.8"
+
+services:
+  django:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      args:
+        DJANGO_SECRET_KEY: ${SB_DJANGO_SECRET_KEY}
+    env_file:
+      - ./backend/.env
+    depends_on:
+      - db
+      - kafka
+    ports:
+      - "8000:8000"
+    command: >
+      sh -c "python manage.py migrate &&
+             daphne -b 0.0.0.0 -p 8000 ${SB_PROJECT_NAME}.asgi:application"
+    volumes:
+      - ./backend:/app
+    networks:
+      - backend-network
+
+  db:
+    image: postgres:14
+    env_file:
+      - ./backend/.env
+    environment:
+      POSTGRES_USER: ${SB_DJANGO_DB_USER}
+      POSTGRES_PASSWORD: ${SB_DJANGO_DB_PASSWORD}
+      POSTGRES_DB: ${SB_DJANGO_DB_NAME}
+    volumes:
+      - db_data:/var/lib/postgresql/data
+      - ./backend/sql:/docker-entrypoint-initdb.d/  # Mount SQL scripts
+    networks:
+      - backend-network
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:latest
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    networks:
+      - backend-network
+
+  kafka:
+    image: confluentinc/cp-kafka:latest
+    depends_on:
+      - zookeeper
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    networks:
+      - backend-network
+    ports:
+      - "9092:9092"
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        REACT_APP_API_URL: ${REACT_APP_SB_API_URL_PORT}
+        
+    env_file:
+      - ./frontend/.env
+    volumes:
+      - ./frontend:/app
+    ports:
+      - "3000:3000"
+    networks:
+      - backend-network
+
+networks:
+  backend-network:
+    driver: bridge
+
+volumes:
+  db_data:

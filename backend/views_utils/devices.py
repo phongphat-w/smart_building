@@ -1,7 +1,7 @@
 # Import block according to Python Enhancement Proposal 8 (PEP 8) guidelines.
 
 # Standard library imports
-import datetime
+from datetime import datetime
 import inspect
 import logging
 import os
@@ -28,7 +28,7 @@ def get_account_devices(request, account_id):
         db.connect()
         sql_cmd = """
             SELECT 
-            a.iot_device_id::char(36)
+            a.iot_device_id
             , a. building_id
             , a. floor_id
             , a. room_id
@@ -46,10 +46,10 @@ def get_account_devices(request, account_id):
             , f.continent_id
             , g.continent_name
             FROM iot_device a 
-            Inner Join device_sub_type b On a.device_sub_type_id = b.device_sub_type_id::char(36)
+            Inner Join device_sub_type b On a.device_sub_type_id = b.device_sub_type_id
             Inner Join device_type c On b.device_type_id = c.device_type_id
-            Inner Join account d On a.account_id = d.account_id::char(36)
-            Inner Join client e On d.client_id = e.client_id::char(36)
+            Inner Join account d On a.account_id = d.account_id
+            Inner Join client e On d.client_id = e.client_id
             Inner Join country f On e.country_id = f.country_id
             Inner Join continent g On f.continent_id = g.continent_id
             Where a.account_id = %s
@@ -80,7 +80,7 @@ def get_building_devices(request, account_id, building_id):
         db.connect()
         sql_cmd = """
             SELECT 
-            a.iot_device_id::char(36)
+            a.iot_device_id
             , a. building_id
             , a. floor_id
             , a. room_id
@@ -98,10 +98,10 @@ def get_building_devices(request, account_id, building_id):
             , f.continent_id
             , g.continent_name
             FROM iot_device a 
-            Inner Join device_sub_type b On a.device_sub_type_id = b.device_sub_type_id::char(36)
+            Inner Join device_sub_type b On a.device_sub_type_id = b.device_sub_type_id
             Inner Join device_type c On b.device_type_id = c.device_type_id
-            Inner Join account d On a.account_id = d.account_id::char(36)
-            Inner Join client e On d.client_id = e.client_id::char(36)
+            Inner Join account d On a.account_id = d.account_id
+            Inner Join client e On d.client_id = e.client_id
             Inner Join country f On e.country_id = f.country_id
             Inner Join continent g On f.continent_id = g.continent_id
             Where a.account_id = %s
@@ -133,7 +133,7 @@ def get_floor_devices(request, account_id, building_id, floor_id):
         db.connect()
         sql_cmd = """
             SELECT 
-            a.iot_device_id::char(36)
+            a.iot_device_id
             , a. building_id
             , a. floor_id
             , a. room_id
@@ -151,10 +151,10 @@ def get_floor_devices(request, account_id, building_id, floor_id):
             , f.continent_id
             , g.continent_name
             FROM iot_device a 
-            Inner Join device_sub_type b On a.device_sub_type_id = b.device_sub_type_id::char(36)
+            Inner Join device_sub_type b On a.device_sub_type_id = b.device_sub_type_id
             Inner Join device_type c On b.device_type_id = c.device_type_id
-            Inner Join account d On a.account_id = d.account_id::char(36)
-            Inner Join client e On d.client_id = e.client_id::char(36)
+            Inner Join account d On a.account_id = d.account_id
+            Inner Join client e On d.client_id = e.client_id
             Inner Join country f On e.country_id = f.country_id
             Inner Join continent g On f.continent_id = g.continent_id
             Where a.account_id = %s
@@ -187,7 +187,7 @@ def get_room_devices(request, account_id, building_id, floor_id, room_id):
         db.connect()
         sql_cmd = """
             SELECT 
-            a.iot_device_id::char(36)
+            a.iot_device_id
             , a. building_id
             , a. floor_id
             , a. room_id
@@ -205,10 +205,10 @@ def get_room_devices(request, account_id, building_id, floor_id, room_id):
             , f.continent_id
             , g.continent_name
             FROM iot_device a 
-            Inner Join device_sub_type b On a.device_sub_type_id = b.device_sub_type_id::char(36)
+            Inner Join device_sub_type b On a.device_sub_type_id = b.device_sub_type_id
             Inner Join device_type c On b.device_type_id = c.device_type_id
-            Inner Join account d On a.account_id = d.account_id::char(36)
-            Inner Join client e On d.client_id = e.client_id::char(36)
+            Inner Join account d On a.account_id = d.account_id
+            Inner Join client e On d.client_id = e.client_id
             Inner Join country f On e.country_id = f.country_id
             Inner Join continent g On f.continent_id = g.continent_id          
             Where a.account_id = %s

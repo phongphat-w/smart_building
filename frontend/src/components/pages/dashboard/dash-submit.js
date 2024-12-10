@@ -2,7 +2,7 @@ import axios from 'axios';
 
 import Logger from '../../com-utils/logger.js';
 
-const API_HOST = process.env.REACT_APP_SB__API_URL + ":" + process.env.REACT_APP_SB__API_PORT;
+const API_HOST = process.env.REACT_APP_SB_API_URL + ":" + process.env.REACT_APP_SB_API_PORT;
 
 export const useHandleSubmit = async (data, setLoading, setMessage) => {
     setLoading(true); // Show loading indicator
