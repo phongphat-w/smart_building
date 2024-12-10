@@ -338,7 +338,7 @@ LOGGING = {
         'django': {
             'handlers': [
                         'timed_rotating_file', 
-                         'db', 
+                        #  'db', 
                          'console'
                          ],  # Log to file, database and console
             'level': DJANGO_LOG_LEVEL,  # Use the defined logging level
@@ -348,7 +348,7 @@ LOGGING = {
         'django.db.backends': {
             'handlers': [
                         'timed_rotating_file', 
-                         'db', 
+                        #  'db', 
                          'console'
                          ],  # Log to file, database and console
             'level': DJANGO_LOG_LEVEL,  # Use the defined logging level
