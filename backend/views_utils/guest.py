@@ -51,12 +51,13 @@ def get_user_info(email):
                 , a.floor_id
                 , a.room_id
                 , a.is_active
-                , a.is_admin
-                , a.is_staff
+                , a.role_id
                 , a.last_login::text
                 , b.account_id
+                , c.role_name
                 FROM backend_guest a
                 INNER JOIN iot_device b on (a.building_id = b.building_id) AND (a.floor_id = b.floor_id) AND (a.room_id = b.room_id)
+                INNER JOIN user_role c on a.role_id = c.role_id
                 WHERE a.email = %s;
             """
         params = (email,)

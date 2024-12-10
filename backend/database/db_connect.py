@@ -49,8 +49,8 @@ class DbConnect:
             self.cursor.execute(query, params)
             self.connection.commit()
 
-            for query in self.connection.queries:
-                db_logger.debug(f"SQL Query: {query['sql']} | Time Taken: {query['time']} ms")
+            # for query in self.connection.queries:
+            #     db_logger.debug(f"SQL Query: {query['sql']} | Time Taken: {query['time']} ms")
 
             print(f"Query executed successfully: {query}")
             return json.loads(json.dumps(self.cursor.fetchall()))

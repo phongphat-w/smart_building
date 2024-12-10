@@ -5,15 +5,30 @@ const SignOutPage = () => {
   const navigate = useNavigate();
 
   // SignOut function - used to remove tokens from localStorage
-  const signOut = useCallback(() => {
-    console.log("DEBUG: signOut() - is working")
-    localStorage.removeItem('sb_access_token');  // Remove access token
-    localStorage.removeItem('sb_refresh_token');  // Remove refresh token
-    localStorage.removeItem('sb_user_info');  // Remove refresh token
-    // console.log("DEBUG: 2 tokens are removed")
-    navigate('/signin');  // Redirect to Sign In page
-  }, [navigate]);
+  const signOut = () => {
+    console.log("DEBUG: signOut() - is working");
 
+    // Remove the items
+    localStorage.removeItem('sb_access_token');
+    localStorage.removeItem('sb_refresh_token');
+    localStorage.removeItem('sb_user_info');
+
+    // Confirm the removal
+    console.log("DEBUG: After removal");
+    console.log("DEBUG: sb_access_token", localStorage.getItem('sb_access_token'));
+    console.log("DEBUG: sb_refresh_token", localStorage.getItem('sb_refresh_token'));
+    console.log("DEBUG: sb_user_info", localStorage.getItem('sb_user_info'));
+  };
+
+  useEffect(() => {
+    console.log("DEBUG: useEffect triggered");
+    signOut();
+
+    // Adding a slight delay before navigating
+    setTimeout(() => {
+      navigate('/signin');
+    }, 1000);  // Delay for 1 second to ensure signOut happens
+  }, [navigate]);
 
   return (
     <div className="signout-message">

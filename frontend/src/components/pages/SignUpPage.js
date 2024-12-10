@@ -70,19 +70,19 @@ const GuestSignupForm = () => {
         // Server responded with an error
         console.error('Error response:', error.response);
         Logger.error(`${GuestSignupForm.name}(): Error response - ' + ${error.response}`);
-        setMessage('Error during registration');
+        setMessage('Error response during registration -' + error.response);
         
       } else if (error.request) {
         // No response received from server
         console.error('Error request:', error.request);
         Logger.error(`${GuestSignupForm.name}(): Error request - ' + ${error.request}`);
-        setMessage('No response from server');
+        setMessage('No response from server - ' + error.request);
 
       } else {
         // Something else went wrong
         console.error('Error:', error.message);
         Logger.error(`${GuestSignupForm.name}(): Error - ' + ${error.message}`);
-        setMessage('Error during registration: ' + error.message);
+        setMessage('Error during registration - ' + error.message);
       }
     }
   };

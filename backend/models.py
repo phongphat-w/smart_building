@@ -56,7 +56,7 @@ class GuestManager(BaseUserManager):
     #     return user
 
 class Guest(AbstractBaseUser):
-    id = models.CharField(default=str(uuid.uuid4()), max_length=36, primary_key=True) # Django require field name, default: uuid_generate_v4()
+    id = models.CharField(max_length=36, primary_key=True) # Django require field name, default: uuid_generate_v4(), config in DB directly.
     first_name = models.CharField(max_length=100)
     last_name = models.CharField(max_length=100)
     email = models.EmailField(max_length=100, unique=True)
@@ -74,7 +74,7 @@ class Guest(AbstractBaseUser):
     # Password is required by default
     REQUIRED_FIELDS = ["first_name", "last_name", "checkin_date", "checkout_date", "building_id", "floor_id", "room_id", "role_id"] 
 
-    objGuestManager = GuestManager()
+    objects = GuestManager() # Do not change variable name from "objects" to other, it is required by Django.
 
     def __str__(self):
         return self.email
@@ -91,7 +91,7 @@ class Guest(AbstractBaseUser):
 
 # Logging
 class BackendLog(models.Model):
-    id = models.CharField(default=str(uuid.uuid4()), max_length=36, primary_key=True) # Django require field name, default: uuid_generate_v4()
+    id = models.CharField(max_length=36, primary_key=True) # Django require field name, default: uuid_generate_v4(), config in DB directly.
     timestamp = models.DateTimeField(auto_now_add=True)
     level = models.CharField(max_length=50)  # e.g., "DEBUG", "INFO", "ERROR", "CRITICAL"
     message = models.TextField()

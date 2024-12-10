@@ -339,7 +339,7 @@ LOGGING = {
             'handlers': [
                         'timed_rotating_file', 
                         #  'db', 
-                         'console'
+                        #  'console'
                          ],  # Log to file, database and console
             'level': DJANGO_LOG_LEVEL,  # Use the defined logging level
             'propagate': True,  # Allow propagation to parent loggers
@@ -349,7 +349,7 @@ LOGGING = {
             'handlers': [
                         'timed_rotating_file', 
                         #  'db', 
-                         'console'
+                        #  'console'
                          ],  # Log to file, database and console
             'level': DJANGO_LOG_LEVEL,  # Use the defined logging level
             'propagate': False,  # Prevent logs from propagating to parent loggers (Main Django logger)

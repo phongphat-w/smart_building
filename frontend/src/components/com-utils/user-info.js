@@ -9,8 +9,6 @@ const getUserInfo = () => {
 };
 
 let loginDisplay = '';
-let isAdmin = false;
-let roleName = '';
 
 // Function to retrieve user-related info
 export function getUserDetails(){
@@ -19,27 +17,13 @@ export function getUserDetails(){
         if (!userInfo) {
             Logger.error(`${getUserDetails.name}(): Error - There is no user information`);
             return null;
-        }
-
-        // Determine user role and construct URL
-        if (userInfo[0]?.is_admin) {
-            isAdmin = true;
-            roleName = 'Administrator';
-        } else if (userInfo[0]?.is_staff) {
-            isAdmin = false;
-            roleName = 'Staff';
-        } else {
-            isAdmin = false;
-            roleName = 'Guest';
-        }
+        }        
 
         // Format login display string
-        loginDisplay = `${userInfo[0]?.first_name} ${userInfo[0]?.last_name} (${roleName})`;
+        loginDisplay = `${userInfo[0]?.first_name} ${userInfo[0]?.last_name} (${userInfo[0]?.role_name})`;
 
         return {
             userInfo,
-            isAdmin,
-            roleName,
             loginDisplay
         };
 

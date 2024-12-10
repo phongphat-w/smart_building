@@ -29,12 +29,12 @@ const LoginPage = () => {
       });
 
       // Extract user info and tokens
-      const userInfo = response.data.sb_user_info;
+      const userInfo = response.data.data.sb_user_info;
       setUserInfo(userInfo);
       console.log("DEBUG: First Name:", userInfo[0].first_name);
 
-      localStorage.setItem('sb_access_token', response.data.sb_access_token);
-      localStorage.setItem('sb_refresh_token', response.data.sb_refresh_token);
+      localStorage.setItem('sb_access_token', response.data.data.sb_access_token);
+      localStorage.setItem('sb_refresh_token', response.data.data.sb_refresh_token);
       localStorage.setItem('sb_user_info', JSON.stringify(userInfo)); // Store as JSON string
 
       console.log('DEBUG: Access Token:', localStorage.getItem('sb_access_token'));
@@ -42,7 +42,7 @@ const LoginPage = () => {
       console.log('DEBUG: User Info:', JSON.parse(localStorage.getItem('sb_user_info')));
 
       // Decode and log token expiration
-      const token = response.data.sb_access_token;
+      const token = response.data?.data?.sb_access_token;
       const decodedToken = jwtDecode(token);
       console.log("DEBUG: Token expiry:", new Date(decodedToken.exp * 1000)); // Convert from seconds to milliseconds
 

@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FaUsers } from 'react-icons/fa';
 import { Button } from 'react-bootstrap';
@@ -7,6 +7,8 @@ import Logger from '../../com-utils/logger.js';
 import { MessageAlert } from '../../com-utils/message-alert.js';
 import { getUserDetails } from '../../com-utils/user-info.js';
 
+const roleIdString = process.env.REACT_APP_SB_ROLE_ID;
+const roleId = JSON.parse(roleIdString);
 
 // it's not a custom hook but a React component.
 export const DashboardHeader = ({ setIsAdmin, setRoleName }) => {
@@ -15,14 +17,14 @@ export const DashboardHeader = ({ setIsAdmin, setRoleName }) => {
         const user_info = getUserDetails();
 
         // Redirect to Sign In page
-        const signOut = useCallback(() => {
+        const signOut = () => {
             navigate('/signout');
-        }, [navigate]);
+        };
 
         // Update parent states
         React.useEffect(() => {
-            setIsAdmin(user_info?.isAdmin);
-            setRoleName(user_info?.roleName);
+            setIsAdmin(user_info?.role_id === roleId.SB_ROLE_ID_ADMIN);
+            setRoleName(user_info?.role_name);
         }, [user_info, setIsAdmin, setRoleName]);
 
         return (
@@ -32,7 +34,7 @@ export const DashboardHeader = ({ setIsAdmin, setRoleName }) => {
                 {/* <button className="btn btn-primary btn-sm" onClick={signOut} style={{ position: 'absolute', top: '10px', right: '10px' }}>
                     <FaUsers></FaUsers>&nbsp;Sign Out
                 </button> */}
-                <Button variant="light" onclick={signOut} style={{ position: 'absolute', top: '10px', right: '10px' }}> <FaUsers></FaUsers>&nbsp;Sign Out </Button>
+                <Button variant="light" onClick={signOut} style={{ position: 'absolute', top: '10px', right: '10px' }}> <FaUsers></FaUsers>&nbsp;Sign Out </Button>
             </div>
         );
     } catch (error) {
