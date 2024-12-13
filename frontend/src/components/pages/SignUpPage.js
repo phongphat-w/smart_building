@@ -5,7 +5,7 @@ import { Link } from 'react-router-dom';
 import Logger from '../../components/com-utils/logger.js'
 import { MessageAlert } from '../com-utils/message-alert.js';
 
-const API_URL = process.env.REACT_APP_SB_API_URL_PORT
+const API_URL = process.env.REACT_APP_SB_API_URL;
 
 const GuestSignupForm = () => {
   const [firstName, setFirstName] = useState('');
@@ -40,8 +40,8 @@ const GuestSignupForm = () => {
     };
   
     try {
-      console.log(`DEBUG: URL = ${API_URL}/api/register_guest/`)
-      const response = await axios.post(`${API_URL}/api/register_guest/`, data, {
+      console.log(`DEBUG: URL = ${API_URL}/register_guest/`)
+      const response = await axios.post(`${API_URL}/register_guest/`, data, {
         headers: {
           'Content-Type': 'application/json',
         },

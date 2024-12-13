@@ -2,6 +2,11 @@
 .env
 .env.enc
 
+docker-compose.yml
+
+#NginX
+backend/nginx/ssl/
+
 # Ignore SQLite database files
 #db.sqlite3
 
@@ -64,3 +69,4 @@ frontend/.env.production.local
 frontend/npm-debug.log*
 frontend/yarn-debug.log*
 frontend/yarn-error.log*
+

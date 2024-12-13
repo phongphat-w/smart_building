@@ -14,11 +14,11 @@ export const useFetchDevices = async (API_HOST, userInfo) => {
         let urlDevices = "";
 
         if (userInfo[0]?.role_id === roleId.SB_ROLE_ID_ADMIN) {
-            urlDevices = `${API_HOST}/api/adevices/${userInfo[0]?.account_id}/`;
+            urlDevices = `${API_HOST}/adevices/${userInfo[0]?.account_id}/`;
         } else if (userInfo[0]?.role_id === roleId.SB_ROLE_ID_STAFF) {
-            urlDevices = `${API_HOST}/api/fdevices/${userInfo[0]?.account_id}/${userInfo[0]?.building_id}/${userInfo[0]?.floor_id}/`;
+            urlDevices = `${API_HOST}/fdevices/${userInfo[0]?.account_id}/${userInfo[0]?.building_id}/${userInfo[0]?.floor_id}/`;
         } else {
-            urlDevices = `${API_HOST}/api/rdevices/${userInfo[0]?.account_id}/${userInfo[0]?.building_id}/${userInfo[0]?.floor_id}/${userInfo[0]?.room_id}`;
+            urlDevices = `${API_HOST}/rdevices/${userInfo[0]?.account_id}/${userInfo[0]?.building_id}/${userInfo[0]?.floor_id}/${userInfo[0]?.room_id}`;
         }
 
         const response = await axios.get(urlDevices);
@@ -26,7 +26,7 @@ export const useFetchDevices = async (API_HOST, userInfo) => {
             return response.data.data; // Return the data
         } else {
             Logger.error('Unexpected response format:', response.data);
-            Logger.error(`${fetchDevices.name}(): Unexpected response format: - ${response.data}`);
+            Logger.error(`${useFetchDevices.name}(): Unexpected response format: - ${response.data}`);
             return [];
         }
     } catch (error) {

@@ -20,7 +20,7 @@ import { MessageAlert } from '../com-utils/message-alert.js';
 // Styles and assets imports
 //--
 
-const API_HOST = process.env.REACT_APP_SB_API_URL + ":" + process.env.REACT_APP_SB_API_PORT;
+const API_URL = process.env.REACT_APP_SB_API_URL;
 
 const DashboardPage = () => {
     try {
@@ -60,7 +60,7 @@ const DashboardPage = () => {
         useEffect(() => {
             const loadDevices = async () => {
                 try {
-                    const data = await useFetchDevices(API_HOST, getUserDetails().userInfo);
+                    const data = await useFetchDevices(API_URL, getUserDetails().userInfo);
                     setDeviceData(data || []); // Fallback to empty array if no data
                 } catch (error) {
                     Logger.error(`${DashboardPage.name}(): Error loading devices: ${error}`);

@@ -6,7 +6,8 @@ from .models import Guest
 class GuestSerializer(serializers.ModelSerializer):
     class Meta:
         model = Guest
-        fields = ["id", "first_name", "last_name", "password", "email", "checkin_date", "checkout_date", "building_id", "floor_id", "room_id", "role_id"]
+        fields = "__all__"
+        # fields = ["id", "first_name", "last_name", "password", "email", "checkin_date", "checkout_date", "building_id", "floor_id", "room_id", "role_id"]
         extra_kwargs = {"password": {"write_only": True}}
 
     def create(self, validated_data):
@@ -24,6 +25,7 @@ class GuestSerializer(serializers.ModelSerializer):
             role_id = validated_data["role_id"],
         )
         return guest
+
 
 #get all users
 # #User = get_user_model()

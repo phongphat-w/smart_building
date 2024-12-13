@@ -1,4 +1,5 @@
 import multiprocessing
+
 from iot_gen_thermostats import iot_generator as iot_generator_thermostats
 from iot_gen_dem_con_ven import iot_generator as iot_generator_dem_con_ven
 from iot_gen_bulb_led import iot_generator as iot_generator_bulb_led
@@ -30,7 +31,7 @@ def run_blinds_shades():
     iot_device_id = "69b29098-c768-423e-ac2e-cc443e18f8a9" #Automated blinds or shades
     iot_generator_blinds_shades(iot_device_id)
 
-if __name__ == "__main__":
+def gen_iot_data_main():
     process_thermostats = multiprocessing.Process(target=run_thermostats)
     process_dem_con_ven = multiprocessing.Process(target=run_dem_con_ven)
     process_bulb_led = multiprocessing.Process(target=run_bulb_led)

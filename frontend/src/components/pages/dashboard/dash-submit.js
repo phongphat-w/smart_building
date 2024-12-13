@@ -2,14 +2,14 @@ import axios from 'axios';
 
 import Logger from '../../com-utils/logger.js';
 
-const API_HOST = process.env.REACT_APP_SB_API_URL + ":" + process.env.REACT_APP_SB_API_PORT;
+const API_URL = process.env.REACT_APP_SB_API_URL;
 
 export const useHandleSubmit = async (data, setLoading, setMessage) => {
     setLoading(true); // Show loading indicator
     setMessage(''); // Clear previous messages
 
     try {
-        const response = await axios.post(`$API_HOST}/api/device_control/`, data, {
+        const response = await axios.post(`$API_HOST}/device_control/`, data, {
             headers: {
                 "Content-Type": "application/json",
             },

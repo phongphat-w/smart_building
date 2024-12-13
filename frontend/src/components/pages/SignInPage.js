@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import { jwtDecode } from "jwt-decode";
 
-const API_URL = process.env.REACT_APP_SB_API_URL + ":" + process.env.REACT_APP_SB_API_PORT;
+const API_URL = process.env.REACT_APP_SB_API_URL;
 
 const LoginPage = () => {
   // State variables for the form fields, error messages, and user info
@@ -22,7 +22,7 @@ const LoginPage = () => {
     const data = { email, password };
 
     try {
-      const response = await axios.post(`${API_URL}/api/login_guest/`, data, {
+      const response = await axios.post(`${API_URL}/login_guest/`, data, {
         headers: {
           'Content-Type': 'application/json',
         },

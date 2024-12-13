@@ -1,41 +1,36 @@
-version: "3.8"
-
 services:
-  django:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-      args:
-        DJANGO_SECRET_KEY: ${SB_DJANGO_SECRET_KEY}
-    env_file:
-      - ./backend/.env
-    depends_on:
-      - db
-      - kafka
+
+  # WebSocket communication (Redis)
+  redis:
+    image: redis:alpine  # Use the lightweight Alpine-based Redis image
     ports:
-      - "8000:8000"
-    command: >
-      sh -c "python manage.py migrate &&
-             daphne -b 0.0.0.0 -p 8000 ${SB_PROJECT_NAME}.asgi:application"
-    volumes:
-      - ./backend:/app
+      - "6379:6379"  # Map the default Redis port to the host
     networks:
       - backend-network
+    volumes:
+      - redis_data:/data  # Persist Redis data to a volume
+    command: redis-server --appendonly yes  # Enable data persistence for Redis
+    restart: always  # Automatically restart on failure
 
-  db:
-    image: postgres:14
+  # Database service: PostgreSQL with TimescaleDB
+  timescaledb:
+    image: timescale/timescaledb:latest-pg16  # TimescaleDB image
     env_file:
       - ./backend/.env
     environment:
-      POSTGRES_USER: ${SB_DJANGO_DB_USER}
-      POSTGRES_PASSWORD: ${SB_DJANGO_DB_PASSWORD}
-      POSTGRES_DB: ${SB_DJANGO_DB_NAME}
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+#      POSTGRES_DB: smart_building
     volumes:
       - db_data:/var/lib/postgresql/data
       - ./backend/sql:/docker-entrypoint-initdb.d/  # Mount SQL scripts
     networks:
       - backend-network
+    ports:
+    - "5432:5432"  # Map container port 5432 to host port 5432
+    restart: always  # Automatically restart on failure
 
+  # Real-time data consumer: Zookeeper
   zookeeper:
     image: confluentinc/cp-zookeeper:latest
     environment:
@@ -43,7 +38,9 @@ services:
       ZOOKEEPER_TICK_TIME: 2000
     networks:
       - backend-network
+    restart: always  # Automatically restart on failure
 
+  # Real-time data consumer: Kafka
   kafka:
     image: confluentinc/cp-kafka:latest
     depends_on:
@@ -58,14 +55,34 @@ services:
       - backend-network
     ports:
       - "9092:9092"
+    restart: always  # Automatically restart on failure
 
+  # Backend service: Django application
+  django:
+    build:
+      context: .
+      dockerfile: ./backend/Dockerfile
+    env_file:
+      - ./backend/.env
+    depends_on:
+      - redis
+      - timescaledb
+      - kafka
+    ports:
+      - "8000:8000"
+    command: >
+      sh -c "daphne -b 0.0.0.0 -p 8000 smart_building.asgi:application"
+    volumes:
+      - .:/app
+    networks:
+      - backend-network
+    restart: always  # Automatically restart on failure
+
+  # Frontend service: React.js application
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-      args:
-        REACT_APP_API_URL: ${REACT_APP_SB_API_URL_PORT}
-        
     env_file:
       - ./frontend/.env
     volumes:
@@ -74,10 +91,35 @@ services:
       - "3000:3000"
     networks:
       - backend-network
+    restart: always  # Automatically restart on failure
+
+  # Reverse proxy service: Nginx
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "8080:8080"  # HTTP port for redirects (to HTTPS)
+      - "443:443"    # HTTPS port
+    depends_on:
+      - django
+      - frontend
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro  # Mount nginx configuration
+      - ./nginx/ssl/nginx.crt:/etc/ssl/certs/nginx.crt:ro  # Mount SSL certificate
+      - ./nginx/ssl/nginx.key:/etc/ssl/private/nginx.key:ro  # Mount SSL key
+    
+    command: >
+      sh -c "nginx -g 'daemon off;'"
+             
+    networks:
+      - backend-network
+    restart: always  # Automatically restart on failure
 
 networks:
+  # Shared bridge network for all services
   backend-network:
     driver: bridge
 
 volumes:
+  # Persistent storage for Redis and PostgreSQL
   db_data:
+  redis_data:

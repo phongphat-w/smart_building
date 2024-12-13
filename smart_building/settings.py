@@ -33,14 +33,14 @@ load_dotenv(dotenv_path = os.path.join(BASE_DIR, "backend" , ".env"))
 SB_PROJECT_NAME=os.getenv("SB_PROJECT_NAME")
 
 #Django
-DJANGO_SECRET_KEY=os.getenv("DJANGO_SECRET_KEY")
-DJANGO_DEBUG=os.getenv("DJANGO_DEBUG")
+SB_DJANGO_SECRET_KEY=os.getenv("SB_DJANGO_SECRET_KEY")
+SB_DJANGO_DEBUG=os.getenv("SB_DJANGO_DEBUG")
 
-DJANGO_DB_HOST=os.getenv("DJANGO_DB_HOST")
-DJANGO_DB_PORT=os.getenv("DJANGO_DB_PORT")
-DJANGO_DB_NAME=os.getenv("DJANGO_DB_NAME")
-DJANGO_DB_USER=os.getenv("DJANGO_DB_USER")
-DJANGO_DB_PASSWORD=os.getenv("DJANGO_DB_PASSWORD")
+SB_DJANGO_DB_HOST=os.getenv("SB_DJANGO_DB_HOST")
+SB_DJANGO_DB_PORT=os.getenv("SB_DJANGO_DB_PORT")
+SB_DJANGO_DB_NAME=os.getenv("SB_DJANGO_DB_NAME")
+SB_DJANGO_DB_USER=os.getenv("SB_DJANGO_DB_USER")
+SB_DJANGO_DB_PASSWORD=os.getenv("SB_DJANGO_DB_PASSWORD")
 
 # Access specific roles
 try:
@@ -77,6 +77,12 @@ SB_GPT_ASSISTANT_ID = os.getenv("SB_GPT_ASSISTANT_ID")
 
 #=========================================================
 
+#SSL https
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+CSRF_COOKIE_SECURE = True
+SESSION_COOKIE_SECURE = True
+
+
 
 # Define Kafka Consumer configuration
 consumer_config = {
@@ -91,12 +97,12 @@ consumer_config = {
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.getenv("DJANGO_SECRET_KEY")
+SECRET_KEY = os.getenv("SB_DJANGO_SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost']
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost', 'django'] #'django': docker url
 
 
 # Application definition
@@ -115,6 +121,8 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt',
     'rest_framework.authtoken',
     'channels',
+	
+	'django_extensions',
     
     #'backend.apps.BackendConfig',  # Make sure the correct AppConfig is used
     
@@ -160,7 +168,7 @@ PASSWORD_HASHERS = [
     'django.contrib.auth.hashers.BCryptSHA256PasswordHasher',
 ]
 
-ASGI_APPLICATION = 'smartbuilding.asgi.application'
+ASGI_APPLICATION = 'smart_building.asgi.application'
 
 # Redis Channel Layer
 CHANNEL_LAYERS = {
@@ -189,6 +197,8 @@ MIDDLEWARE = [
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",  # React frontend
     "http://127.0.0.1:3000",  # React frontend (127.0.0.1 for some cases)
+	"https://localhost:3000",  # React frontend SSL
+    "https://127.0.0.1:3000",  # React frontend (127.0.0.1 for some cases) SSL
 ]
 
 #CORS_ALLOW_ALL_ORIGINS = True # Do not use in production
@@ -237,11 +247,11 @@ WSGI_APPLICATION = 'smart_building.wsgi.application'
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
-        "HOST": DJANGO_DB_HOST,
-        "PORT": DJANGO_DB_PORT,
-        "NAME": DJANGO_DB_NAME,
-        "USER": DJANGO_DB_USER,
-        "PASSWORD": DJANGO_DB_PASSWORD,
+        "HOST": SB_DJANGO_DB_HOST,
+        "PORT": SB_DJANGO_DB_PORT,
+        "NAME": SB_DJANGO_DB_NAME,
+        "USER": SB_DJANGO_DB_USER,
+        "PASSWORD": SB_DJANGO_DB_PASSWORD,
     }
 }
 
@@ -299,6 +309,7 @@ if not os.path.exists(log_dir):
 
 # Set the logging level. Use 'DEBUG' for development and 'INFO' for production.
 DJANGO_LOG_LEVEL = os.getenv("DJANGO_LOG_LEVEL")  # DEBUG captures all log levels (DEBUG, INFO, WARNING, ERROR, CRITICAL)
+DJANGO_LOG_BACKUP_COUNT = os.getenv("DJANGO_LOG_BACKUP_COUNT") # Days to keep log
 
 LOGGING = {
     'version': 1,
@@ -311,7 +322,7 @@ LOGGING = {
             'filename': os.path.join(log_dir, 'django.log'),
             'when': 'midnight',  # Rotate logs at midnight
             'interval': 1,  # Rotate every day
-            'backupCount': 500,  # Retain logs for the last 500 days
+            'backupCount': DJANGO_LOG_BACKUP_COUNT,  # Retain logs for the last 500 days
             'formatter': 'verbose',
         },
         # Console Handler for real-time log output
@@ -334,7 +345,7 @@ LOGGING = {
         },
     },
     'loggers': {
-        # Main Django logger (Parent)
+        # Main Django logger (Parent Log)
         'django': {
             'handlers': [
                         'timed_rotating_file', 
