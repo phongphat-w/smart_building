@@ -1,11 +1,17 @@
+# Python Enhancement Proposal 8 (PEP 8)
+
+# Standard library imports
 import multiprocessing
 
-from iot_gen_thermostats import iot_generator as iot_generator_thermostats
-from iot_gen_dem_con_ven import iot_generator as iot_generator_dem_con_ven
+# Third-party imports
+
+# Local application imports
+from iot_gen_blinds_shades import iot_generator as iot_generator_blinds_shades
 from iot_gen_bulb_led import iot_generator as iot_generator_bulb_led
-from iot_gen_smart_meter import iot_generator as iot_generator_smart_meter
+from iot_gen_dem_con_ven import iot_generator as iot_generator_dem_con_ven
 from iot_gen_presence import iot_generator as iot_generator_presence
-from iot_gen_blinds_shades import iot_generator as iot_generator_blinds_shades 
+from iot_gen_smart_meter import iot_generator as iot_generator_smart_meter
+from iot_gen_thermostats import iot_generator as iot_generator_thermostats
 
 def run_thermostats():
     iot_device_id = "7c84b98d-8f69-4959-ac5b-1b2743077151"  # Smart thermostats

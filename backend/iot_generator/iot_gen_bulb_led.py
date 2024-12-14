@@ -1,13 +1,20 @@
-import json
-from datetime import datetime 
-import time
-import pytz  # To handle time zones
-import sqlite3
-import random
-import uuid
-import os
-from dotenv import load_dotenv
+# Python Enhancement Proposal 8 (PEP 8)
+
+# Standard library imports
 import inspect
+import json
+import os
+import random
+import sqlite3
+import time
+import uuid
+from datetime import datetime
+
+# Third-party imports
+import pytz  # To handle time zones
+from dotenv import load_dotenv
+
+# Local application imports
 
 con_iot_device_id = "c0ec3c70-b76f-45e0-9297-8b5a4a462a47" #Smart bulbs and LED lights
 root_path = os.path.abspath(os.path.join(os.getcwd(), "..", ".."))

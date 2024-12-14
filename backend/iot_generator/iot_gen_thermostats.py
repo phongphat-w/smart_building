@@ -1,13 +1,20 @@
-import json
-from datetime import datetime 
-import time
-import pytz  # To handle time zones
-import sqlite3
-import random
-import uuid
-import os
-from dotenv import load_dotenv
+# Python Enhancement Proposal 8 (PEP 8)
+
+# Standard library imports
 import inspect
+import json
+import os
+import random
+import sqlite3
+import time
+import uuid
+from datetime import datetime
+
+# Third-party imports
+import pytz  # To handle time zones
+from dotenv import load_dotenv
+
+# Local application imports
 
 con_iot_device_id = "7c84b98d-8f69-4959-ac5b-1b2743077151" #Smart thermostats
 root_path = os.path.abspath(os.path.join(os.getcwd(), "..", ".."))
