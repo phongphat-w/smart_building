@@ -17,6 +17,15 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v3
 
+      # Ensure reports directory exists
+      - name: Create Reports Directory
+        run: |
+          mkdir -p reports
+
+      # Start Services (backend, frontend, etc.)
+      - name: Start Services
+        run: docker-compose up -d
+
       # Run Backend Tests
       - name: Run Backend Tests
         run: |
