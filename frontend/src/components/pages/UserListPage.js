@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 
+const API_URL = process.env.REACT_APP_SB_API_URL;
+
 const UserListPage = () => {
   const [users, setUsers] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
@@ -11,7 +13,7 @@ const UserListPage = () => {
   // Fetch users data from the API
   const fetchUsers = useCallback(async (page = 1) => {
     try {
-      const response = await axios.get(`http://127.0.0.1:8000/api/get_users/?search=${searchQuery}&page=${page}`);
+      const response = await axios.get(`${API_URL}/get_users/?search=${searchQuery}&page=${page}`);
       
       // Check the data returned
       console.log("API Response:", response.data);

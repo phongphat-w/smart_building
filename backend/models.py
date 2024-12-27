@@ -12,7 +12,7 @@ import logging
 # Set up a logger instance
 logger = logging.getLogger("django")
 
-class GuestManager(BaseUserManager):
+class UserManager(BaseUserManager):
     def create_user(self, first_name, last_name, password, email, checkin_date, checkout_date, building_id, floor_id, room_id, role_id):
         if not email:
             print(f"""{inspect.currentframe().f_code.co_name}(): Warning - The Email field must be set""")
@@ -55,26 +55,30 @@ class GuestManager(BaseUserManager):
     #     user.save(using=self._db)
     #     return user
 
-class Guest(AbstractBaseUser):
-    id = models.CharField(max_length=36, primary_key=True) # Django require field name, default: uuid_generate_v4(), config in DB directly.
+class User(AbstractBaseUser):
+    id = models.CharField(max_length=36, default=str(uuid.uuid4()), primary_key=True) # Django require field name, default: uuid_generate_v4(), config in DB directly.
+    account_id = models.CharField(max_length=36)
     first_name = models.CharField(max_length=100)
     last_name = models.CharField(max_length=100)
     email = models.EmailField(max_length=100, unique=True)
+    role_id = models.CharField(default=settings.SB_ROLE_ID.get("SB_ROLE_ID_GUEST") ,max_length=3) #table user_role.role_id: 003 is guest
+    is_active = models.BooleanField(default=True) #False, if require activation by email
+    last_login = models.DateTimeField()
     checkin_date = models.DateTimeField()
     checkout_date = models.DateTimeField()
     building_id = models.CharField(default="000",max_length=3)
     floor_id = models.CharField(default="0000", max_length=4)
     room_id = models.CharField(default="00000",max_length=5)
-    is_active = models.BooleanField(default=True) #False, if require activation by email
-    role_id = models.CharField(default=settings.SB_ROLE_ID.get("SB_ROLE_ID_GUEST") ,max_length=3) #table user_role.role_id: 003 is guest
+    create_at = models.DateTimeField(default=datetime.now())
+    update_at = models.DateTimeField(default=datetime.now())
 
     USERNAME_FIELD = "email"
 
     #The field named as the "USERNAME_FIELD" for a custom user model must not be included in "REQUIRED_FIELDS".
     # Password is required by default
-    REQUIRED_FIELDS = ["first_name", "last_name", "checkin_date", "checkout_date", "building_id", "floor_id", "room_id", "role_id"] 
+    REQUIRED_FIELDS = ["account_id", "first_name", "last_name", "role_id", "checkin_date", "checkout_date", "building_id", "floor_id", "room_id"] 
 
-    objects = GuestManager() # Do not change variable name from "objects" to other, it is required by Django.
+    objects = UserManager() # Do not change variable name from "objects" to other, it is required by Django.
 
     def __str__(self):
         return self.email
@@ -87,6 +91,7 @@ class Guest(AbstractBaseUser):
     
     class Meta:
         app_label = "backend"
+        db_table = "backend_user"
 
 
 # Logging

@@ -1,0 +1,45 @@
+auth_enabled: false
+
+server:
+  http_listen_port: 3100
+  grpc_listen_port: 9095
+
+distributor:
+  ring:
+    kvstore:
+      store: inmemory
+
+ingester:
+  chunk_idle_period: 5m
+  chunk_target_size: 1048576
+  max_chunk_age: 1h
+
+storage_config:
+  boltdb_shipper:
+    active_index_directory: /loki/index
+    cache_location: /loki/cache
+
+  schema_config:
+    configs:
+      - from: 2020-10-24
+        store: boltdb
+        object_store: filesystem
+        schema: v11
+        index:
+          prefix: loki_
+          period: 168h
+
+retention_policy: 1098d  # Retention for 3*366
+
+limits_config:
+  max_entries_limit: 5000
+  enforce_metric_name: false
+  max_line_length: 2048
+
+# Scraping config
+scrape_configs:
+  - job_name: "varlogs"
+    static_configs:
+      - targets: ['localhost:3100']
+        labels:
+          job: varlogs

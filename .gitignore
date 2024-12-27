@@ -2,6 +2,15 @@
 .env
 .env.enc
 
+.github/workflows/ci_prod.yml
+
+#docker-compose.yml
+
+backend/iot_generator/generation/temp/
+
+#NginX
+backend/nginx/ssl/
+
 # Ignore SQLite database files
 #db.sqlite3
 
@@ -40,6 +49,8 @@ backend/.docker/
 # Configuration for DEV env
 frontend/eslint.config.mjs
 
+frontend/__.dockerignore
+
 # dependencies
 frontend/node_modules/
 frontend/.pnp
@@ -64,3 +75,4 @@ frontend/.env.production.local
 frontend/npm-debug.log*
 frontend/yarn-debug.log*
 frontend/yarn-error.log*
+

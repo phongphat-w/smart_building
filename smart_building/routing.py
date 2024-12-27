@@ -1,6 +1,6 @@
 from django.urls import re_path
-from . import consumers
+from .consume import IoTConsumer
 
 websocket_urlpatterns = [
-    re_path(r'ws/iot/$', consumers.IoTConsumer.as_asgi()),
+    re_path(r'ws/iot/$', IoTConsumer.as_asgi()),
 ]

@@ -2,71 +2,100 @@
 
 # Standard library imports
 import inspect
-import json
-import logging
+import datetime
 import os
+import sys
+import traceback
+
 #from dotenv import load_dotenv
+import psycopg2
+import pytz
+from dotenv import load_dotenv
+from psycopg2.extras import RealDictCursor
 
 # Third-party imports
-import psycopg2
-from psycopg2.extras import RealDictCursor
-import logging
 
-# Local application/library imports
-# N/A
 
-db_logger = logging.getLogger('django.db.backends')
-logger = logging.getLogger(__name__)
+# Local application imports
+project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+print("DEBUG: project_root = " + project_root)
+if project_root not in sys.path:
+    sys.path.insert(0, project_root)
 
-class DbConnect:
+from backend.logging.system_logging import IotLogging
+
+class DbConnectServer:
     def __init__(self):
+        self.__load_config()
         self.connection = None
         self.cursor = None
+        self.log = IotLogging(self.SB_IOT_GEN_DATA_LOG_FILE)
+
+    def __load_config(self):
+        self.root_path = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+        load_dotenv(dotenv_path=os.path.join(self.root_path, ".env"))
+
+        self.SB_TIMESCALEDB_DB_HOST = os.getenv("SB_TIMESCALEDB_DB_HOST")
+        self.SB_TIMESCALEDB_DB_PORT = os.getenv("SB_TIMESCALEDB_DB_PORT")
+        self.SB_TIMESCALEDB_DB_NAME = os.getenv("SB_TIMESCALEDB_DB_NAME")
+        self.SB_TIMESCALEDB_DB_USER = os.getenv("SB_TIMESCALEDB_DB_USER")
+        self.SB_TIMESCALEDB_DB_PASSWORD = os.getenv("SB_TIMESCALEDB_DB_PASSWORD")
+        self.SB_IOT_GEN_DATA_LOG_FILE = os.getenv("SB_IOT_GEN_DATA_LOG_FILE") 
 
     def connect(self):
         try:
             # Create a connection object
             self.connection = psycopg2.connect(
-                host = os.getenv("SB_TIMESCALEDB_DB_HOST"),
-                port = os.getenv("SB_TIMESCALEDB_DB_PORT"),
-                dbname = os.getenv("SB_TIMESCALEDB_DB_NAME"),
-                user = os.getenv("SB_TIMESCALEDB_DB_USER"),
-                password = os.getenv("SB_TIMESCALEDB_DB_PASSWORD") 
+                host = self.SB_TIMESCALEDB_DB_HOST,
+                port = self.SB_TIMESCALEDB_DB_PORT,
+                dbname = self.SB_TIMESCALEDB_DB_NAME,
+                user = self.SB_TIMESCALEDB_DB_USER,
+                password = self.SB_TIMESCALEDB_DB_PASSWORD
             )
-
             # Create a cursor object
             self.cursor = self.connection.cursor(cursor_factory=RealDictCursor)
-            print("Connected to the PostgreSQL database")
-
+            print("Connected to database server")
         except Exception as e:
-            print(f"""{inspect.currentframe().f_code.co_name}(): Error - {e}""")
-            logger.error(f"{inspect.currentframe().f_code.co_name}(): {e}")
-            raise Exception("Unable to connect to the database.")
+            error_msg = f"""{datetime.now(pytz.timezone(self.SB_PROJECT_STD_TIMEZONE))}: {inspect.currentframe().f_code.co_name}(): Error - {e}\n{traceback.format_exc()}"""
+            print(error_msg)
+            self.logger.error(error_msg)
+            self.cursor = None       
+            
 
-    #Execute a query and return results.
-    def execute_query(self, query, params=None):
+    # Method for executing SELECT (read-only) queries
+    def execute_read(self, query, query_params=None):
         try:
-            self.cursor.execute(query, params)
-            self.connection.commit()
+            if not self.cursor: return None # Return None to indicate failure
 
-            # for query in self.connection.queries:
-            #     db_logger.debug(f"SQL Query: {query['sql']} | Time Taken: {query['time']} ms")
-
-            print(f"Query executed successfully: {query}")
-            return json.loads(json.dumps(self.cursor.fetchall()))
-        
+            self.cursor.execute(query, query_params)
+            results = self.cursor.fetchall()  # Fetch the result set
+            print(f"SELECT query executed successfully: {query}")
+            return results
         except Exception as e:
-            print(f"""{inspect.currentframe().f_code.co_name}(): Error - {e}""")
-            print(f"""{inspect.currentframe().f_code.co_name}(): Query - {query}""")
-            logger.error(f"{inspect.currentframe().f_code.co_name}(): {e}")
-            self.connection.rollback()
-            return json.dumps([])
+            error_msg = f"""{datetime.now(pytz.timezone(self.SB_PROJECT_STD_TIMEZONE))}: {inspect.currentframe().f_code.co_name}(): Error - {e}\n{traceback.format_exc()}"""
+            print(error_msg)
+            self.logger.error(error_msg)
+            return None  # Return None to indicate failure
+    
+    def execute_write(self, query, query_params=None):
+        # Method for executing data-modifying queries (INSERT, UPDATE, DELETE)
+        try:
+            if not self.cursor: return False
 
-    #Close the database connection
+            self.cursor.execute(query, query_params)
+            self.connection.commit()  # Commit changes to the database
+            print(f"Modify query executed successfully: {query}")
+            return True
+        except Exception as e:
+            # Log the error and rollback in case of failure
+            error_msg = f"""{datetime.now(pytz.timezone(self.SB_PROJECT_STD_TIMEZONE))}: {inspect.currentframe().f_code.co_name}(): Error - {e}\n{traceback.format_exc()}"""
+            print(error_msg)
+            self.logger.error(error_msg)
+            self.connection.rollback()  # Rollback in case of error
+            return False
+    
     def close(self):
-        
-        if self.cursor:
-            self.cursor.close()
-        if self.connection:
-            self.connection.close()
+        #Close the database connection
+        if self.cursor: self.cursor.close()
+        if self.connection: self.connection.close()
         print("Database connection closed.")

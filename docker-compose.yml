@@ -1,83 +1,263 @@
-version: "3.8"
-
 services:
-  django:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-      args:
-        DJANGO_SECRET_KEY: ${SB_DJANGO_SECRET_KEY}
-    env_file:
-      - ./backend/.env
-    depends_on:
-      - db
-      - kafka
-    ports:
-      - "8000:8000"
-    command: >
-      sh -c "python manage.py migrate &&
-             daphne -b 0.0.0.0 -p 8000 ${SB_PROJECT_NAME}.asgi:application"
-    volumes:
-      - ./backend:/app
-    networks:
-      - backend-network
 
-  db:
-    image: postgres:14
+  # WebSocket communication (Redis)
+  redis:
+    image: redis:alpine  # Use the lightweight Alpine-based Redis image
+    container_name: redis-con
+    hostname: localhost
+    ports:
+      - "6379:6379"  # Map the default Redis port to the host
+    networks:
+      - docker-network
+    volumes:
+      - redis_data:/data  # Persist Redis data to a volume
+    command: redis-server --appendonly yes --requirepass ${SB_REDIS_PASSWORD:-password}  # Enable data persistence for Redis
+    environment:
+      TZ: Asia/Bangkok  # Set timezone to Bangkok
+    restart: always  # Automatically restart on failure
+
+  # Database service: PostgreSQL with TimescaleDB
+  timescaledb:
+    image: timescale/timescaledb:latest-pg16  # TimescaleDB image
+    container_name: timescaledb-con
+    hostname: localhost
     env_file:
       - ./backend/.env
     environment:
-      POSTGRES_USER: ${SB_DJANGO_DB_USER}
-      POSTGRES_PASSWORD: ${SB_DJANGO_DB_PASSWORD}
-      POSTGRES_DB: ${SB_DJANGO_DB_NAME}
+      POSTGRES_USER: ${SB_TIMESCALEDB_DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${SB_TIMESCALEDB_DB_PASSWORD:-password}
+      #POSTGRES_DB: -
+      TZ: Asia/Bangkok  # Set timezone to Bangkok
     volumes:
       - db_data:/var/lib/postgresql/data
       - ./backend/sql:/docker-entrypoint-initdb.d/  # Mount SQL scripts
     networks:
-      - backend-network
+      - docker-network
+    ports:
+    - "5432:5432"  # Map container port 5432 to host port 5432
+    restart: always  # Automatically restart on failure
 
+  # Real-time data consumer: Zookeeper
   zookeeper:
     image: confluentinc/cp-zookeeper:latest
+    container_name: zookeeper-con
+    hostname: localhost
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
+      TZ: Asia/Bangkok  # Set timezone to Bangkok
     networks:
-      - backend-network
+      - docker-network
+    restart: always  # Automatically restart on failure
 
+  # Real-time data consumer: Kafka
   kafka:
     image: confluentinc/cp-kafka:latest
-    depends_on:
-      - zookeeper
+    container_name: kafka-con
+    hostname: localhost
+    volumes:
+      - ./kafka/config/server.properties:/etc/kafka/server.properties  # Kafka configuration
+      - kafka-metadata:/var/lib/kafka/metadata                         # Metadata directory
+      - kafka-logs:/var/lib/kafka/logs                                 # Logs directory
     environment:
-      KAFKA_BROKER_ID: 1
-      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_BROKER_ID: 1                              # Unique ID for the Kafka broker
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181         # Connect to Zookeeper
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-    networks:
-      - backend-network
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1       # Single-node replication factor
+      KAFKA_LOG_DIRS: /var/lib/kafka/data             # Directory for log segments
+      KAFKA_METADATA_LOG_DIR: /var/lib/kafka/metadata  # Directory for metadata
+      TZ: Asia/Bangkok                             
+    # command: sh -c "kafka-server-start /etc/kafka/server.properties"  # Start Kafka server
+    depends_on:
+      - zookeeper                                  
     ports:
       - "9092:9092"
+      # - "9093:9093"                                
+    networks:
+      - docker-network                            
+    restart: always # Automatically restart on failure                               
 
+  # Backend service: Django application
+  backend:
+    build:
+    # context: .
+      dockerfile: ./backend/Dockerfile
+    container_name: backend-con
+    hostname: localhost
+    env_file:
+      - ./backend/.env
+    # depends_on:
+    #   - redis
+    #   - timescaledb
+    #   - kafka
+    ports:
+      - "8000:8000"
+    # command: >
+    #   sh -c "daphne -b 0.0.0.0 -p 8000 smart_building.asgi:application"
+    volumes:
+      - ./backend/:/app/backend/ # map for allowing live changes to be reflected without rebuilding the image.
+      - ./smart_building/:/app/smart_building/
+      - ./manage.py:/app/manage.py
+    environment:
+      TZ: Asia/Bangkok  # Set timezone to Bangkok
+    networks:
+      - docker-network
+    restart: always  # Automatically restart on failure
+
+  # Frontend service: React.js application
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-      args:
-        REACT_APP_API_URL: ${REACT_APP_SB_API_URL_PORT}
-        
+    container_name: frontend-con
+    hostname: localhost
     env_file:
       - ./frontend/.env
+    # depends_on:
+    #   - backend
     volumes:
-      - ./frontend:/app
+      - ./frontend:/app # map for allowing live changes to be reflected without rebuilding the image.
     ports:
       - "3000:3000"
+    environment:
+      TZ: Asia/Bangkok  # Set timezone to Bangkok
     networks:
-      - backend-network
+      - docker-network
+    restart: always  # Automatically restart on failure
+
+  # Reverse proxy service: Nginx
+  nginx:
+    image: nginx:alpine
+    container_name: nginx-con
+    hostname: localhost
+    ports:
+      - "8080:8080"  # HTTP port for redirects (to HTTPS)
+      - "443:443"    # HTTPS port
+    # depends_on:
+    #   - backend
+    #   - frontend
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro  # Mount nginx configuration
+      - ./nginx/ssl/nginx.crt:/etc/ssl/certs/nginx.crt:ro  # Mount SSL certificate
+      - ./nginx/ssl/nginx.key:/etc/ssl/private/nginx.key:ro  # Mount SSL key
+    command: >
+      sh -c "nginx -g 'daemon off;'"
+    environment:
+      TZ: Asia/Bangkok  # Set timezone to Bangkok       
+    networks:
+      - docker-network
+    restart: always  # Automatically restart on failure
+
+  nginx-exporter:
+    image: nginx/nginx-prometheus-exporter:latest
+    container_name: nginx-exporter-con
+    hostname: localhost
+    command: >
+      --nginx.scrape-uri=http://nginx:8080/stub_status
+    # --nginx.ssl-verify=false
+    ports:
+      - "9113:9113"
+    networks:
+      - docker-network
+    depends_on:
+      - nginx
+    restart: always
+
+  nginx-exporter-https:
+    image: nginx/nginx-prometheus-exporter:latest
+    container_name: nginx-exporter-https-con
+    hostname: localhost
+    command: >
+      --nginx.scrape-uri=https://nginx:443/stub_status
+    # --nginx.ssl-verify=false
+    ports:
+      - "9114:9113"  # Use a different port to avoid conflict
+    networks:
+      - docker-network
+    depends_on:
+      - nginx
+    restart: always
+
+  # Monitoring service: Prometheus
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus-con
+    hostname: localhost
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    command: >
+      --config.file=/etc/prometheus/prometheus.yml
+      --storage.tsdb.retention.time=15d
+    ports:
+      - "9090:9090"
+    environment:
+      TZ: Asia/Bangkok
+    networks:
+      - docker-network
+    restart: always  # Automatically restart on failure
+
+  # Visualization service: Grafana
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana-con
+    hostname: localhost
+    env_file:
+      - ./backend/.env
+    ports:
+      - "3001:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+    environment:
+      GF_SECURITY_ADMIN_USER: ${SB_GRAFANA_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${SB_GRAFANA_PASSWORD:-password}
+      TZ: Asia/Bangkok
+    depends_on:
+      - prometheus
+    networks:
+      - docker-network
+    restart: always  # Automatically restart on failure
+
+  # loki:
+  #   image: grafana/loki:latest
+  #   container_name: loki-con
+  #   hostname: localhost
+  #   ports:
+  #     - "3100:3100"  # Expose Loki's HTTP API
+  #   volumes:
+  #     - ./loki/loki-config.yaml:/etc/loki/config.yaml  # Mount the config file
+  #     - loki-data:/loki  # Persist Loki data
+  #   depends_on:
+  #     - grafana
+  #   networks:
+  #       - docker-network
+  #   restart: always  # Ensure Loki restarts if it stops
+
+  # promtail:
+  #   image: grafana/promtail:latest
+  #   container_name: promtail-con
+  #   hostname: localhost
+  #   volumes:
+  #     - ./promtail/promtail-config.yaml:/etc/promtail/config.yaml
+  #     - promtail-data:/var/log/promtail # Use Docker volume to store logs inside the container 
+  #   depends_on:
+  #     - loki
+  #   networks:
+  #       - docker-network
+  #   restart: always # Ensure Loki restarts if it stops
 
 networks:
-  backend-network:
+  # Shared bridge network for all services
+  docker-network:
     driver: bridge
 
 volumes:
+  # Persistent storage for Redis and PostgreSQL
+  redis_data:
+  kafka-metadata:
+  kafka-logs:
   db_data:
+  grafana_data:
+  # loki-data:
+  # promtail-data:
+  

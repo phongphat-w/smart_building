@@ -1,0 +1,49 @@
+global:
+  scrape_interval: 15s  # Scrape targets every 15 seconds
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: "kafka"
+    static_configs:
+      - targets: ["localhost:9092"]
+
+  - job_name: "timescaledb"
+    static_configs:
+      - targets: ["localhost:5432"]
+
+  - job_name: "redis"
+    static_configs:
+      - targets: ["localhost:6379"]
+
+  - job_name: "backend"
+    static_configs:
+      - targets: ["localhost:8000"]
+
+  - job_name: "frontend"
+    static_configs:
+      - targets: ["localhost:3000"]
+
+  # Nginx Exporter job
+  - job_name: "nginx-exporter"
+    static_configs:
+      - targets: ["localhost:9113"]
+
+  - job_name: "nginx-exporter-https"
+    static_configs:
+      - targets: ["localhost:9114"]
+
+  # Scrape raw metrics directly from nginx (HTTP)
+  - job_name: "nginx-http"
+    static_configs:
+      - targets: ["localhost:8080"]
+    metrics_path: "/stub_status"
+
+  # Scrape raw metrics directly from nginx (HTTPS)
+  - job_name: "nginx-https"
+    static_configs:
+      - targets: ["localhost:443"]
+    metrics_path: "/stub_status"
+    scheme: "https"
+    tls_config:
+      insecure_skip_verify: true  # Optional for self-signed certificates
+

@@ -1,0 +1,4 @@
+*
+!backend/
+!smart_building/
+!manage.py
