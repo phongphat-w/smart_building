@@ -1,83 +1,81 @@
 # Python Enhancement Proposal 8 (PEP 8)
 
 # Standard library imports
+import datetime
+import hashlib
 import inspect
 import json
 import logging
-from logging.handlers import TimedRotatingFileHandler
 import os
 import sqlite3
+import sys
 import time
 import traceback
-from datetime import datetime
+from logging.handlers import TimedRotatingFileHandler
 from multiprocessing.pool import Pool
 
 # Third-party library imports
 import psycopg2
+import pytz
 from confluent_kafka import Consumer, Producer, KafkaError, KafkaException
 from dotenv import load_dotenv
 
 # Local application imports:
-#
+# from iot_get_info import IotInfo
+project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
+print("DEBUG: project_root = " + project_root)
+if project_root not in sys.path:
+    sys.path.insert(0, project_root)
+from backend.iot_generator.iot_utils.iot_get_info import IotInfo # Absolute import
+from backend.logging.system_logging import IotLogging
 
 class KafkaConsumerManager():
     def __init__(self, iot_device_id):
-        self.iot_device_id = iot_device_id
-        self.load_config()
+        self.__load_config()
         self.setup_kafka()
-        self.config_log()
+        self.iot_device_id = iot_device_id
+        self.log = IotLogging(self.SB_IOT_CONSUME_DATA_LOG_FILE)
 
         # SQLite database path
-        self.db_path = os.path.join(self.root_path, "backend", "database", "iot_local_db")
+        self.db_path = os.path.join(self.root_path, "database", "iot_local_db")
 
-    def load_config(self):
-        self.root_path = os.path.abspath(os.path.join(os.getcwd(), "..", ".."))
-        load_dotenv(dotenv_path=os.path.join(self.root_path, "", ".env"))
+    def __load_config(self):
+        self.root_path = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+        # print("DEBUG: self.root_path = " + self.root_path)
+        load_dotenv(dotenv_path=os.path.join(self.root_path, ".env"))
+        self.SB_PROJECT_STD_TIMEZONE = os.getenv("SB_PROJECT_STD_TIMEZONE")
         self.SB_KAFKA_HOST = os.getenv("SB_KAFKA_HOST")
         self.SB_KAFKA_PORT = os.getenv("SB_KAFKA_PORT")
+        self.SB_IOT_CONSUME_DATA_LOG_FILE = os.getenv("SB_IOT_CONSUME_DATA_LOG_FILE")
         self.SB_KAFKA_CONSUMER_GROUP = os.getenv("SB_KAFKA_CONSUMER_GROUP")
-        self.SB_KAFKA_CONSUMER_TOPIC = os.getenv("SB_KAFKA_CONSUMER_TOPIC")
+        self.SB_KAFKA_TOPIC = os.getenv("SB_KAFKA_TOPIC")
         self.SB_TIMESCALEDB_DB_HOST = os.getenv("SB_TIMESCALEDB_DB_HOST")
         self.SB_TIMESCALEDB_DB_PORT = os.getenv("SB_TIMESCALEDB_DB_PORT")
         self.SB_TIMESCALEDB_DB_NAME = os.getenv("SB_TIMESCALEDB_DB_NAME")
         self.SB_TIMESCALEDB_DB_USER = os.getenv("SB_TIMESCALEDB_DB_USER")
         self.SB_TIMESCALEDB_DB_PASSWORD = os.getenv("SB_TIMESCALEDB_DB_PASSWORD")
         self.SB_KAFKA_DATA_FREQUENCY = int(os.getenv("SB_KAFKA_DATA_FREQUENCY"))
+        self.SB_KAFKA_COMPRESSION = os.getenv("SB_KAFKA_COMPRESSION")
+
+        # print("DEBUG: load_config() - self.SB_KAFKA_TOPIC = " + self.SB_KAFKA_TOPIC)
 
     def setup_kafka(self):
+        # Kafka consumer instances
         self.consumer_config = {
             "bootstrap.servers": f"{self.SB_KAFKA_HOST}:{self.SB_KAFKA_PORT}",
             "group.id": self.SB_KAFKA_CONSUMER_GROUP,
             "auto.offset.reset": "earliest",
         }
-        # Kafka Producer and Consumer instances
-        self.producer = Producer({"bootstrap.servers": f"{self.SB_KAFKA_HOST}:{self.SB_KAFKA_PORT}"})
         self.consumer = Consumer(self.consumer_config)
-        self.consumer.subscribe([self.SB_KAFKA_CONSUMER_TOPIC])
+        self.consumer.subscribe([self.SB_KAFKA_TOPIC])
 
-    def config_log(self):
-        log_dir = os.path.join(self.root_path, "logs")
-        os.makedirs(log_dir, exist_ok=True)  # Ensure the log directory exists
-        log_file_path = os.path.join(log_dir, "iot_gen.log")
-
-        # Configure TimedRotatingFileHandler
-        handler = TimedRotatingFileHandler(
-            log_file_path, 
-            when="midnight",    # Rotate at midnight
-            interval=1,         # Interval of 1 day
-            backupCount=500     # Keep the last 500 log files
-        )
-        
-        # Add a datetime format to the rotated log files
-        handler.suffix = "%Y-%m-%d"
-
-        # Configure logging
-        logging.basicConfig(
-            level=logging.ERROR,
-            format="%(asctime)s - %(levelname)s - %(message)s",
-            handlers=[handler]  # Use the TimedRotatingFileHandler
-        )
-        self.logger = logging.getLogger(__name__)
+        # Kafka Producer instances 
+        producer_config = {
+            "bootstrap.servers": f"{self.SB_KAFKA_HOST}:{self.SB_KAFKA_PORT}",
+            "compression.type": self.SB_KAFKA_COMPRESSION,
+            "batch.num.messages": 1000,
+        }        
+        self.producer = Producer(producer_config)
 
     def get_server_conn(self):
         retries = 3
@@ -95,8 +93,9 @@ class KafkaConsumerManager():
                 if attempt < retries - 1:
                     time.sleep(2 ** attempt)  # Exponential backoff
                 else:
-                    print(f"{inspect.currentframe().f_code.co_name}(): Error - {e}\n{traceback.format_exc()}")
-                    self.logger.error(f"{inspect.currentframe().f_code.co_name}(): Error - {e}\n{traceback.format_exc()}")
+                    error_msg = f"""{datetime.now(pytz.timezone(self.SB_PROJECT_STD_TIMEZONE))}: {inspect.currentframe().f_code.co_name}(): Error - {e}\n{traceback.format_exc()}"""
+                    print(error_msg)
+                    self.logger.error(error_msg)
                     return None
 
     def insert_centralized_db(self, conn, data):
@@ -129,14 +128,15 @@ class KafkaConsumerManager():
             conn.commit()
             print(f"Data inserted into centralized database successfully for {len(data)} records.")
             self.logger.info(f"Inserted {len(data)} records into TimescaleDB.")
-            conn.close()
             return True
         except Exception as e:
-            if conn: conn.rollback()
-            print(f"{inspect.currentframe().f_code.co_name}(): Error - {e}")
-            self.logger.error(f"{inspect.currentframe().f_code.co_name}(): Error - {e}\n{traceback.format_exc()}")
-            if conn: conn.close()
+            error_msg = f"""{datetime.now(pytz.timezone(self.SB_PROJECT_STD_TIMEZONE))}: {inspect.currentframe().f_code.co_name}(): Error - {e}\n{traceback.format_exc()}"""
+            print(error_msg)
+            self.logger.error(error_msg)
+            if conn: conn.rollback()    
             return False
+        finally:
+            if conn: conn.close()
 
     def update_local_db(self): #SQLite
         conn = None
@@ -155,40 +155,14 @@ class KafkaConsumerManager():
         finally:
             if conn: conn.close()
 
-    def get_iot_info(self):
-        conn = None
-        try:
-            conn = self.get_server_conn()
-            if conn:
-                cursor = conn.cursor()
-                cursor.execute(
-                    f"""
-                    SELECT a.account_id, c.client_id, c.client_name, d.country_name, d.time_zone
-                    FROM iot_device a
-                    INNER JOIN account b ON a.account_id = b.account_id
-                    INNER JOIN client c ON b.client_id = c.client_id
-                    INNER JOIN country d ON c.country_id = d.country_id
-                    WHERE a.iot_device_id = '{self.iot_device_id}'
-                    """
-                )
-                row = cursor.fetchall()
-                conn.close()
-                return row
-            else:
-                conn.close()
-                return []
-        except Exception as e:
-            if conn: conn.close()
-            print(f"{inspect.currentframe().f_code.co_name}(): Error - {e}")
-            self.logger.error(f"{inspect.currentframe().f_code.co_name}(): Error - {e}\n{traceback.format_exc()}")
-            return []
 
     def fetch_unsynced_local_db(self):
         conn = None
         try:
-            iot_info = self.get_iot_info()
+            iot = IotInfo(self.iot_device_id)
+            iot_info = iot.get_iot_info()
             
-            if iot_info:
+            if iot_info != "[]":
                 db_filename = os.path.join(self.db_path, f"{self.iot_device_id}.sqlite3")
                 conn = sqlite3.connect(db_filename)
                 cursor = conn.cursor()
@@ -203,8 +177,8 @@ class KafkaConsumerManager():
                 data = [
                     {
                         "device_id": row[1],
-                        "client_id": iot_info[0][1],
-                        "account_id": iot_info[0][0],
+                        "client_id": iot_info[0]["client_id"],
+                        "account_id": iot_info[0]["account_id"],
                         "measured_at": row[2],
                         "sensor_type": row[3],
                         "sensor_value": row[4],
@@ -217,11 +191,26 @@ class KafkaConsumerManager():
             else:
                 return []
         except Exception as e:
+            error_msg = f"""{datetime.now(pytz.timezone(self.SB_PROJECT_STD_TIMEZONE))}: {inspect.currentframe().f_code.co_name}(): Error - {e}\n{traceback.format_exc()}"""
+            print(error_msg)
+            self.logger.error(error_msg)
             if conn: conn.close()
-            print(f"{inspect.currentframe().f_code.co_name}(): Error - {e}")
-            self.logger.error(f"{inspect.currentframe().f_code.co_name}(): Error - {e}\n{traceback.format_exc()}")
             return []    
 
+    def get_partition_key(self):
+        """
+        Hash the device_id to create a consistent partition key.
+        """
+        hashed_key = hashlib.md5(self.iot_device_id.encode()).hexdigest()
+        partition_key = int(hashed_key, 16) # Convert hash to integer for partition calculations
+        return str(partition_key)  # Kafka requires a string key
+    
+    def delivery_report(self, err, msg):
+        if err:
+            print(f"Message delivery failed: {err}")
+        else:
+            print(f"Message delivered to {msg.topic()} [{msg.partition()}]")
+    
     def produce_to_kafka(self, data): # Produce unsynced data to Kafka
         """
         Produce multiple records to Kafka.
@@ -243,18 +232,18 @@ class KafkaConsumerManager():
             # print(f"{inspect.currentframe().f_code.co_name}(): Info - {serialized_data}")
 
             # Produce the serialized data to Kafka
-            self.producer.produce(self.SB_KAFKA_CONSUMER_TOPIC, value=serialized_data)
+            self.producer.produce(self.SB_KAFKA_TOPIC, key=self.get_partition_key(), value=serialized_data, callback=self.delivery_report())
             self.producer.flush()
 
-            print(f"Produced {len(data)} records to Kafka topic {self.SB_KAFKA_CONSUMER_TOPIC}.")
-            self.logger.info(f"Produced {len(data)} records to Kafka topic {self.SB_KAFKA_CONSUMER_TOPIC}.")
+            print(f"Produced {len(data)} records to Kafka topic {self.SB_KAFKA_TOPIC}.")
+            self.logger.info(f"Produced {len(data)} records to Kafka topic {self.SB_KAFKA_TOPIC}.")
 
             return True
-
             
         except Exception as e:
-            print(f"{inspect.currentframe().f_code.co_name}(): Error - {e}\n{traceback.format_exc()}")
-            self.logger.error(f"{inspect.currentframe().f_code.co_name}(): Error - {e}\n{traceback.format_exc()}")
+            error_msg = f"""{datetime.now(pytz.timezone(self.SB_PROJECT_STD_TIMEZONE))}: {inspect.currentframe().f_code.co_name}(): Error - {e}\n{traceback.format_exc()}"""
+            print(error_msg)
+            self.logger.error(error_msg)
             return False
         
     def get_unsynced_data(self): # Start ingest data from SQLite
@@ -283,8 +272,9 @@ class KafkaConsumerManager():
             if isinstance(kafka_data, dict):  # Single record case
                 kafka_data = [kafka_data]  # Convert to list for consistency
             elif not isinstance(kafka_data, list):  # Invalid case
-                print(f"{inspect.currentframe().f_code.co_name}(): Error - Invalid Kafka message format: {kafka_data}")
-                self.logger.error(f"{inspect.currentframe().f_code.co_name}(): Error - Invalid Kafka message format: {kafka_data}")
+                error_msg = f"""{datetime.now(pytz.timezone(self.SB_PROJECT_STD_TIMEZONE))}: {inspect.currentframe().f_code.co_name}(): Error - Invalid Kafka message format: {kafka_data} - {e}\n{traceback.format_exc()}"""
+                print(error_msg)
+                self.logger.error(error_msg)
                 return False
 
             # kafka_data is list
@@ -336,8 +326,12 @@ def run_consume(iot_device_id):
     consumer = KafkaConsumerManager(iot_device_id)
     consumer.consume_kafka_main()
 
-# def consume_iot_data_main()
-if __name__ == "__main__":  
+#def consume_iot_data_main(): 
+if __name__ == "__main__":
+    """
+    Creates multiple Kafka consumers for a list of IoT device IDs
+    and runs them in parallel using a process pool.
+    """
     iot_device_ids = [
         "7c84b98d-8f69-4959-ac5b-1b2743077151",  # Smart thermostats
         "080d460f-e54c-4262-a4ac-a3d42c40cbd5",  # Demand-Controlled Ventilation (DCV)
@@ -346,7 +340,7 @@ if __name__ == "__main__":
         "96b38698-d9ad-4355-807f-5580397471a1", #Presence sensors
         "69b29098-c768-423e-ac2e-cc443e18f8a9", #Automated blinds or shades
     ]
-    with Pool(processes=10) as pool:  # Limit to 10 concurrent processes
+    with Pool(processes=100) as pool:  # Limit concurrent processes
         pool.map(run_consume, iot_device_ids)
 
-    print("Muti-consumers have completed execution.")
+    # print("Muti-consumers have completed execution.")

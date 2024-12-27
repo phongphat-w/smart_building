@@ -13,7 +13,7 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 
 # Local application/library imports
-from backend.database.db_connect import DbConnect
+from backend.database.db_connect import DbConnectServer
 # from ..models import IoTDevice
 # from ..serializers import IoTDeviceSerializer
 
@@ -23,10 +23,10 @@ logger = logging.getLogger(__name__)
 @api_view(["GET"])
 @permission_classes([AllowAny])  # Allow any user to register
 def get_account_devices(request, account_id):
-    db = DbConnect()
+    db = DbConnectServer()
     try:
         db.connect()
-        sql_cmd = """
+        query = """
             SELECT 
             a.iot_device_id
             , a. building_id
@@ -56,7 +56,7 @@ def get_account_devices(request, account_id):
             ORDER BY a.account_id, a.building_id, a.floor_id, a.room_id, b.device_type_id ASC 
         """
         params = (account_id,)
-        result = db.execute_query(sql_cmd, params)
+        result = db.execute_query(query, params)
         #if result != []:
         # print("result = ", result, "type of result = ", type(result))
         if result != "[]":    
@@ -75,10 +75,10 @@ def get_account_devices(request, account_id):
 @api_view(["GET"])
 @permission_classes([AllowAny])  # Allow any user to register
 def get_building_devices(request, account_id, building_id):
-    db = DbConnect()
+    db = DbConnectServer()
     try:
         db.connect()
-        sql_cmd = """
+        query = """
             SELECT 
             a.iot_device_id
             , a. building_id
@@ -109,7 +109,7 @@ def get_building_devices(request, account_id, building_id):
             ORDER BY a.account_id, a.building_id, a.floor_id, a.room_id, b.device_type_id ASC 
         """
         params = (account_id, building_id,)
-        result = db.execute_query(sql_cmd, params)
+        result = db.execute_query(query, params)
         #if result != []:
         # print("result = ", result, "type of result = ", type(result))
         if result != "[]":
@@ -128,10 +128,10 @@ def get_building_devices(request, account_id, building_id):
 @api_view(["GET"])
 @permission_classes([AllowAny])  # Allow any user to register
 def get_floor_devices(request, account_id, building_id, floor_id):
-    db = DbConnect()
+    db = DbConnectServer()
     try:
         db.connect()
-        sql_cmd = """
+        query = """
             SELECT 
             a.iot_device_id
             , a. building_id
@@ -163,7 +163,7 @@ def get_floor_devices(request, account_id, building_id, floor_id):
             ORDER BY a.account_id, a.building_id, a.floor_id, a.room_id, b.device_type_id ASC 
         """
         params = (account_id, building_id, floor_id)
-        result = db.execute_query(sql_cmd, params)
+        result = db.execute_query(query, params)
         #if result != []:
         # print("result = ", result, "type of result = ", type(result))
         if result != "[]":           
@@ -182,10 +182,10 @@ def get_floor_devices(request, account_id, building_id, floor_id):
 @api_view(["GET"])
 @permission_classes([AllowAny])  # Allow any user to register
 def get_room_devices(request, account_id, building_id, floor_id, room_id):
-    db = DbConnect()
+    db = DbConnectServer()
     try:
         db.connect()
-        sql_cmd = """
+        query = """
             SELECT 
             a.iot_device_id
             , a. building_id
@@ -218,7 +218,7 @@ def get_room_devices(request, account_id, building_id, floor_id, room_id):
             ORDER BY a.account_id, a.building_id, a.floor_id, a.room_id, b.device_type_id ASC 
         """
         params = (account_id, building_id, floor_id, room_id)
-        result = db.execute_query(sql_cmd, params)
+        result = db.execute_query(query, params)
         #if result != []:
         # print("result = ", result, "type of result = ", type(result))
         if result != "[]":           

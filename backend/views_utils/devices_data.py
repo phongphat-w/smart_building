@@ -13,13 +13,13 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 
 # Local application/library imports
-from backend.database.db_connect import DbConnect
+from backend.database.db_connect import DbConnectServer
 
 # Set up a logger instance
 logger = logging.getLogger(__name__)
 
 def gen_sql_thermostats():
-    sql_cmd_ = """
+    query_ = """
         (
         Select 1 as record_id, measured_at::date as measured_at_date, To_char(measured_at, 'yyyy-MM-dd HH:MI') as measured_at_time, sensor_type, sensor_value 
         From iot_data
@@ -40,24 +40,24 @@ def gen_sql_thermostats():
         )
         Order by record_id Asc
         """
-    return sql_cmd_
+    return query_
 
 @api_view(["GET"])
 @permission_classes([AllowAny])  # Allow any user to register
 def get_device_data(request):
 
-    db = DbConnect()
+    db = DbConnectServer()
     try:
         db.connect()
         device_id = request.device_id
-        sql_cmd = ""
+        query = ""
         if device_id == "7c84b98d-8f69-4959-ac5b-1b2743077151": #Smart thermostats
-            sql_cmd = gen_sql_thermostats()
+            query = gen_sql_thermostats()
             params = (device_id, "temperature", device_id, "battery_level")
         else:
             pass
 
-        result = db.execute_query(sql_cmd, params)
+        result = db.execute_query(query, params)
         #if result != []:
         # print("result = ", result, "type of result = ", type(result))
         if result != "[]":    

@@ -2,7 +2,11 @@
 .env
 .env.enc
 
-docker-compose.yml
+.github/workflows/ci_prod.yml
+
+#docker-compose.yml
+
+backend/iot_generator/generation/temp/
 
 #NginX
 backend/nginx/ssl/
@@ -44,6 +48,8 @@ backend/.docker/
 #==================================================================
 # Configuration for DEV env
 frontend/eslint.config.mjs
+
+frontend/__.dockerignore
 
 # dependencies
 frontend/node_modules/

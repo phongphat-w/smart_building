@@ -13,15 +13,15 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework_simplejwt.tokens import RefreshToken
-from rest_framework_simplejwt.views import TokenRefreshView
-from rest_framework.exceptions import AuthenticationFailed
-from rest_framework.authtoken.models import Token
+# from rest_framework_simplejwt.views import TokenRefreshView
+# from rest_framework.exceptions import AuthenticationFailed
+# from rest_framework.authtoken.models import Token
 
 # Local application/library imports
-from backend.database.db_connect import DbConnect
-from backend.models import Guest
+from backend.database.db_connect import DbConnectServer
+from backend.models import User
 from backend.models_utils.auth_backend import EmailBackend
-from backend.serializers import GuestSerializer
+# from backend.serializers import UserSerializer
 
 # Set up a logger instance
 logger = logging.getLogger(__name__)
@@ -33,13 +33,13 @@ def create_tokens_for_user(user):
     return access_token, refresh_token
 
 def get_user_info(email):
-    db = DbConnect()
+    db = DbConnectServer()
     try:
         if email == "":
             return "[]" #Json empty
         #
         db.connect()
-        sql_cmd = """
+        query = """
                 SELECT
                 DISTINCT
                 a.id
@@ -61,7 +61,7 @@ def get_user_info(email):
                 WHERE a.email = %s;
             """
         params = (email,)
-        result = db.execute_query(sql_cmd, params)
+        result = db.execute_query(query, params)
 
         if result:
             return result #Json
@@ -71,7 +71,7 @@ def get_user_info(email):
         db.close()
     except Exception as e:
         print(f"""{datetime.now()}: {inspect.currentframe().f_code.co_name}(): Error - {e}""")
-        logger.exception(f"{inspect.currentframe().f_code.co_name}(): Error fetching user info: {e}")
+        logger.error(f"{inspect.currentframe().f_code.co_name}(): Error fetching user info: {e}")
         return "[]" #Json empty
         db.close()
        
@@ -82,7 +82,7 @@ def register_guest(request):
     try:
         if request.method == "POST":
             data = request.data
-            # Extract data from the request
+            # Extract data from the request            
             first_name = data.get("first_name")
             last_name = data.get("last_name")
             password = data.get("password")
@@ -101,8 +101,9 @@ def register_guest(request):
                 return Response({"warning": f"All fields are required, please verify. Missing fields: {', '.join(missing_fields)}"}, status=status.HTTP_400_BAD_REQUEST)
 
             # Create the new guest
-            user = Guest.objGuestManager.create_user(
+            user = User.objects.create_user(
                 #id: default
+                account_id = settings.SB_PROJECT_ACCOUNT_ID,
                 first_name=first_name,
                 last_name=last_name,
                 password=password,
@@ -114,7 +115,7 @@ def register_guest(request):
                 room_id=room_id,
                 role_id=settings.SB_ROLE_ID.get("SB_ROLE_ID_GUEST")
             )
-            logger.info(f"{inspect.currentframe().f_code.co_name}(): Guest created with user_id: {user.id}")
+            logger.info(f"{inspect.currentframe().f_code.co_name}(): User created with user_id: {user.id}")
 
             # Generate JWT tokens for the guest
             # access_token, refresh_token = create_tokens_for_user(guest)
@@ -122,7 +123,7 @@ def register_guest(request):
             # logger.info(f"{inspect.currentframe().f_code.co_name}(): Refresh Token: {refresh_token}")
 
             # Serializer to return the guest data
-            serializer = GuestSerializer(user)
+            # serializer = UserSerializer(user)
 
             # Return the guest data along with tokens
             return Response({
@@ -160,7 +161,7 @@ def register_staff(request):
                 return Response({"warning": f"All fields are required, please verify. Missing fields: {', '.join(missing_fields)}"}, status=status.HTTP_400_BAD_REQUEST)
 
             # Create the new guest
-            user = Guest.objGuestManager.create_staff(
+            user = User.objects.create_staff(
                 #id: default
                 first_name=first_name,
                 last_name=last_name,
@@ -170,7 +171,7 @@ def register_staff(request):
                 floor_id=floor_id,
                 role_id=settings.SB_ROLE_ID.get("SB_ROLE_ID_STAFF")
             )
-            logger.info(f"{inspect.currentframe().f_code.co_name}(): Guest created with user_id: {user.id}")
+            logger.info(f"{inspect.currentframe().f_code.co_name}(): User created with user_id: {user.id}")
 
             # Generate JWT tokens for the guest
             # access_token, refresh_token = create_tokens_for_user(guest)
@@ -178,7 +179,7 @@ def register_staff(request):
             # logger.info(f"{inspect.currentframe().f_code.co_name}(): Refresh Token: {refresh_token}")
 
             # Serializer to return the guest data
-            serializer = GuestSerializer(user)
+            # serializer = UserSerializer(user)
 
             # Return the guest data along with tokens
             return Response({
@@ -217,7 +218,7 @@ def register_admin(request):
                 return Response({"warning": f"All fields are required, please verify. Missing fields: {', '.join(missing_fields)}"}, status=status.HTTP_400_BAD_REQUEST)
 
             # Create the new guest
-            user = Guest.objGuestManager.create_admin(
+            user = User.objects.create_admin(
                 #id: default
                 first_name=first_name,
                 last_name=last_name,
@@ -227,7 +228,7 @@ def register_admin(request):
                 # floor_id=floor_id,
                 role_id=settings.SB_ROLE_ID.get("SB_ROLE_ID_ADMIN")
             )
-            logger.info(f"{inspect.currentframe().f_code.co_name}(): Guest created with user_id: {user.id}")
+            logger.info(f"{inspect.currentframe().f_code.co_name}(): User created with user_id: {user.id}")
 
             # Generate JWT tokens for the guest
             # access_token, refresh_token = create_tokens_for_user(guest)
@@ -235,7 +236,7 @@ def register_admin(request):
             # logger.info(f"{inspect.currentframe().f_code.co_name}(): Refresh Token: {refresh_token}")
 
             # Serializer to return the guest data
-            serializer = GuestSerializer(user)
+            # serializer = UserSerializer(user)
 
             # Return the guest data along with tokens
             return Response({
@@ -332,14 +333,14 @@ def refresh_token(request):
 # @api_view(["GET"])
 # @permission_classes([IsAuthenticated])
 # def get_user_devices(request):
-#     db = DbConnect()
+#     db = DbConnectServer()
 #     try:
 #         # Get the guest ID
 #         user_id = request.user.id
 #         logger.info(f"{inspect.currentframe().f_code.co_name}(): Fetching devices for user_id: {user_id}")
 
 #         db.connect()
-#         sql_cmd = """
+#         query = """
 #                 SELECT 
 #                     a.iot_device_id, 
 #                     a.device_sub_type_id, 
@@ -358,7 +359,7 @@ def refresh_token(request):
 #                     b.id = %s;
 #             """
 #         params = (user_id,)
-#         result = db.execute_query(sql_cmd, params)
+#         result = db.execute_query(query, params)
 
 #         if result:
 #             logger.info(f"{inspect.currentframe().f_code.co_name}(): Devices fetched successfully for user_id: {user_id}")

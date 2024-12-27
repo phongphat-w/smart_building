@@ -1,17 +1,16 @@
-from rest_framework import serializers
-from .models import Guest
+from .models import User
 from django.contrib.auth import get_user_model
-from .models import Guest
+from rest_framework import serializers
 
-class GuestSerializer(serializers.ModelSerializer):
+class UserSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Guest
+        model = User
         fields = "__all__"
         # fields = ["id", "first_name", "last_name", "password", "email", "checkin_date", "checkout_date", "building_id", "floor_id", "room_id", "role_id"]
         extra_kwargs = {"password": {"write_only": True}}
 
     def create(self, validated_data):
-        guest = Guest.objects.create_user(  
+        guest = User.objects.create_user(  
             # id = validated_data["id"],
             first_name = validated_data["first_name"],
             last_name = validated_data["last_name"],
@@ -29,8 +28,8 @@ class GuestSerializer(serializers.ModelSerializer):
 
 #get all users
 # #User = get_user_model()
-# User = Guest()
-# class GuestSerializer(serializers.ModelSerializer):
+# User = User()
+# class UserSerializer(serializers.ModelSerializer):
 #     class Meta:
 #         model = User
 #         fields = ["email", "first_name", "last_name", "checkin_date", "checkout_date", "building_id", "floor_id", "room_id", "is_active"]

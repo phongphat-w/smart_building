@@ -31,6 +31,7 @@ load_dotenv(dotenv_path = os.path.join(BASE_DIR, "backend" , ".env"))
 # Back-end (Django) -------------------------------------
 
 SB_PROJECT_NAME=os.getenv("SB_PROJECT_NAME")
+SB_PROJECT_ACCOUNT_ID=os.getenv("SB_PROJECT_ACCOUNT_ID")
 
 #Django
 SB_DJANGO_SECRET_KEY=os.getenv("SB_DJANGO_SECRET_KEY")
@@ -102,7 +103,7 @@ SECRET_KEY = os.getenv("SB_DJANGO_SECRET_KEY")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost', 'django'] #'django': docker url
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost', 'backend',] #'backend': docker url used by Prometheus
 
 
 # Application definition
@@ -123,6 +124,7 @@ INSTALLED_APPS = [
     'channels',
 	
 	'django_extensions',
+    'django_prometheus',
     
     #'backend.apps.BackendConfig',  # Make sure the correct AppConfig is used
     
@@ -159,7 +161,7 @@ AUTHENTICATION_BACKENDS = (
     'django.contrib.auth.backends.ModelBackend',  # Fallback to default if needed
 )
 
-AUTH_USER_MODEL = 'backend.Guest' #app_label.ModelName
+AUTH_USER_MODEL = 'backend.User' #app_label.ModelName
 
 PASSWORD_HASHERS = [
     'django.contrib.auth.hashers.Argon2PasswordHasher',
@@ -181,6 +183,9 @@ CHANNEL_LAYERS = {
 }
 
 MIDDLEWARE = [
+    'django_prometheus.middleware.PrometheusBeforeMiddleware',
+
+
     'corsheaders.middleware.CorsMiddleware', # This must be at the top
     'django.middleware.common.CommonMiddleware', # Ensure this is below the CorsMiddleware
 
@@ -192,6 +197,8 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     
+
+     'django_prometheus.middleware.PrometheusAfterMiddleware',
 ]
 
 CORS_ALLOWED_ORIGINS = [
@@ -278,13 +285,12 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/5.1/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'en-us'  # Can keep this as 'en-us' or change to 'th' for Thai
 
-TIME_ZONE = 'UTC'
+USE_TZ = True  # Enable timezone support
+TIME_ZONE = 'UTC'  # Convert to local when display
 
-USE_I18N = True
-
-USE_TZ = True
+USE_I18N = True  # Internationalization (Translation support)
 
 
 # Static files (CSS, JavaScript, Images)

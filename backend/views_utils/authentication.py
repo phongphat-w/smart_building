@@ -6,22 +6,14 @@ import inspect
 import logging
 
 # Third-party imports
+from django.conf import settings
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
-from rest_framework.permissions import AllowAny, IsAuthenticated
-from rest_framework_simplejwt.tokens import RefreshToken
-from rest_framework_simplejwt.views import TokenRefreshView
-from rest_framework.exceptions import AuthenticationFailed
-from rest_framework.authtoken.models import Token
+from rest_framework.permissions import AllowAny
 
 # Local application/library imports
-from backend.database.db_connect import DbConnect
-from backend.models import Guest
-from backend.models_utils.auth_backend import EmailBackend
-from backend.serializers import GuestSerializer
 
-from django.conf import settings
 
 # Set up a logger instance
 logger = logging.getLogger(__name__)

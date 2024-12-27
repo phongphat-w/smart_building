@@ -13,7 +13,7 @@ WORKDIR /app
 # Copy the entire folder to the working directory
 COPY ./backend/ /app/backend/
 COPY ./smart_building/ /app/smart_building/
-COPY manage.py /app/manage.py
+COPY ./manage.py /app/manage.py
 
 # Install dependencies
 RUN pip install --no-cache-dir -r /app/backend/requirements.txt
